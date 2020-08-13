@@ -23,25 +23,20 @@
     "clean": "rm -rf dist",
     "build:cjs": "./node_modules/.bin/tsc -p tsconfig.cjs.json",
     "build:umd": "webpack",
-    "build": "yarn clean && yarn build:cjs && yarn build:umd",
+    "build": "run-s clean build:cjs build:umd",
     "test": "tsdx test ./test",
-    "lint": "tsdx lint src test",
-    "prepare": "yarn lint && yarn build && yarn test"
+    "lint": "tsdx lint src test"
   },
   "devDependencies": {
     "@types/jest": "25.1.1",
     "@types/node": "13.7.0",
     "husky": "4.2.1",
+    "npm-run-all": "4.1.5",
     "tsdx": "0.12.3",
     "tslib": "1.10.0",
     "typescript": "3.7.5",
     "webpack": "4.41.6",
     "webpack-cli": "3.3.11"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint"
-    }
   },
   "prettier": {
     "printWidth": 80,

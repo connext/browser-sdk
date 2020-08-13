@@ -3,11 +3,6 @@
   "name": "@connext/browser-sdk-monorepo",
   "description": "Monorepo for Browser SDK",
   "private": true,
-  "workspaces": [
-    "browser-sdk",
-    "iframe-frontend",
-    "iframe-channel-provider"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/connext/browser-sdk.git"
@@ -17,5 +12,42 @@
   "bugs": {
     "url": "https://github.com/connext/browser-sdk/issues"
   },
-  "homepage": "https://github.com/connext/browser-sdk#readme"
+  "homepage": "https://github.com/connext/browser-sdk#readme",
+  "scripts": {
+    "bootstrap:frontend": "cd iframe-frontend && npm install",
+    "bootstrap:packages": "lerna bootstrap --hoist",
+    "bootstrap": "npm install && run-s bootstrap:frontend bootstrap:packages",
+    "clean:build": "lerna exec -- rm -rf dist",
+    "clean:plock": "lerna exec -- rm -rf package-lock.json",
+    "clean:modules": "lerna exec -- rm -rf node_modules",
+    "clean:all": "run-s clean:build clean:plock clean:modules",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "eslint -c './.eslintrc' --fix 'packages/*/**/*.ts'",
+    "check": "run-s clean:build lint build test"
+  },
+  "devDependencies": {
+    "@types/bn.js": "4.11.6",
+    "@types/jest": "25.1.1",
+    "@types/node": "13.7.0",
+    "@typescript-eslint/eslint-plugin": "2.20.0",
+    "@typescript-eslint/parser": "2.20.0",
+    "eslint": "5.16.0",
+    "eslint-config-prettier": "6.10.0",
+    "eslint-config-standard": "14.1.0",
+    "eslint-plugin-import": "2.20.1",
+    "eslint-plugin-node": "11.0.0",
+    "eslint-plugin-prettier": "3.1.2",
+    "eslint-plugin-promise": "4.2.1",
+    "eslint-plugin-react": "7.18.3",
+    "eslint-plugin-standard": "4.0.1",
+    "husky": "4.2.1",
+    "lerna": "^3.22.1",
+    "npm-run-all": "4.1.5",
+    "tsdx": "0.12.3",
+    "tslib": "1.10.0",
+    "typescript": "3.7.5",
+    "webpack": "4.41.6",
+    "webpack-cli": "3.3.11"
+  }
 }
