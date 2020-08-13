@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "name": "@connext/browser-sdk-monorepo",
+  "description": "Monorepo for Browser SDK",
+  "private": true,
+  "workspaces": [
+    "browser-sdk",
+    "iframe-frontend",
+    "iframe-channel-provider"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connext/browser-sdk.git"
+  },
+  "author": "Connext & Friends",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/connext/browser-sdk/issues"
+  },
+  "homepage": "https://github.com/connext/browser-sdk#readme"
+}
