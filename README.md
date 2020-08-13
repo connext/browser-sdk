@@ -4,7 +4,7 @@ The Connext Browser SDK is the simplest way to add micropayments to any web app.
 Connext is the protocol for p2p micropayments, built with state channels on Ethereum and other EVM blockchains. This SDK creates a Connext client inside of an iframe in your browser page, and then uses that client and some minimal UI components to dispatch transfers.
 
 The SDK supports the following features:
-- 📨 Email-based logins by default via [Magic.Link](https://magic.link).
+- 🎩 Email-based logins via [Magic](https://magic.link).
 - 💳 Debit card on/offboarding via ________.
 - ⛽ End-to-end Ethereum gas (transaction fee) abstraction.
 - 💵 Transfers denoted in USD, with optional customizeability to other currencies.
@@ -13,8 +13,8 @@ The SDK supports the following features:
 ### Table of Contents
 - [Installation](https://github.com/connext/browser-sdk/blob/master/README.md#installation)
 - [Quick Start](https://github.com/connext/browser-sdk/blob/master/README.md#quick-start)
-- Advanced Configuration
-- API Reference
+- [Advanced Configuration](https://github.com/connext/browser-sdk/blob/master/README.md#advanced-configuration)
+- [API Reference](https://github.com/connext/browser-sdk/blob/master/README.md#api-reference)
 - Contributing
 
 ## Installation
