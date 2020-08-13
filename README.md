@@ -11,8 +11,8 @@ The SDK supports the following features:
 - 🦊 Logins using any popular Ethereum wallet such as [Metamask](https://metamask.io). (coming soon!)
 
 ### Table of Contents
-- Installation
-- Quick Start
+- [Installation](https://github.com/connext/browser-sdk/blob/master/README.md#installation)
+- [Quick Start](https://github.com/connext/browser-sdk/blob/master/README.md#quick-start)
 - Advanced Configuration
 - API Reference
 - Contributing
