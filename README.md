@@ -25,42 +25,50 @@ npm i connext
 ```
 
 ## Quick Start
-After installing, import the SDK into your web app and then instantiate it.
+After installing, import the SDK into your web app, instantiate it and open the login UI.
 ```javascript
 import * as SDK from 'connext';
 
 const sdk = new SDK();
+await sdk.login();
 ```
 Note that by default the sdk will spin up in `sandbox` mode on the Rinkeby Ethereum testnet. You will be able to create and send transactions, but they will not use real money. To send real-world value, you can instantiate the sdk in `production` mode:
 
 ```javascript
 const sdk = new SDK('production')
 ```
-
-You can pop open the login UI using:
-```javascript
-await sdk.login();
-```
-
-And then do the same with deposit:
+After going through the login flow, your SDK is now ready to go! Open the deposit UI to put funds into Connext:
 ```javascript
 await sdk.deposit();
 ```
 
-You can query balance or the user's SDK identifier:
+You can query balance or the user's SDK identifier with:
 ```javascript
-const id = sdk.publicIdentifier; // id = "indraABC123..."
+const id = sdk.publicIdentifier; // id = "indra123abc..."
 const balance = await sdk.balance(); // balance = "1.234567"
 ```
 
-And send micropayments using a recipient public identifier and amount:
+And send micropayments using a recipient identifier and amount:
 ```javascript
-const receiverIdentifier = "indra987ZXY..."
+const recipientIdentifier = "indra987zxy..."
 const amount = "0.00001"
-await sdk.transfer(receiverIdentifier, amount)
+await sdk.transfer(recipientIdentifier, amount)
 ```
 
-Lastly, open the withdraw UI in the same way as deposit and login:
+Lastly, to open the withdraw UI:
 ```javascript
 await sdk.withdraw();
 ```
+## Advanced Configuration
+By default the browser SDK uses Dai, a USD-stable Ethereum token and connects to our bootstrap Connext node on testnet or mainnet.
+
+You can use the SDK with a custom Connext node and/or token too -- just pass in these params when instantiating:
+```javascript
+const sdk = new SDK({
+      assetId: "0xabc123..." // Token address (0x0 for Eth)
+      nodeUrl: "https://node.example.com"
+      ethProviderUrl: "https://infura.com/abc123
+   })
+```
+
+## API Reference
