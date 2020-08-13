@@ -36,6 +36,7 @@ Note that by default the sdk will spin up in `sandbox` mode on the Rinkeby Ether
 ```javascript
 const sdk = new SDK('production')
 ```
+
 You can pop open the login UI using:
 ```javascript
 await sdk.login();
@@ -44,4 +45,22 @@ await sdk.login();
 And then do the same with deposit:
 ```javascript
 await sdk.deposit();
+```
+
+You can query balance or the user's SDK identifier:
+```javascript
+const id = sdk.publicIdentifier; // id = "indraABC123..."
+const balance = await sdk.balance(); // balance = "1.234567"
+```
+
+And send micropayments using a recipient public identifier and amount:
+```javascript
+const receiverIdentifier = "indra987ZXY..."
+const amount = "0.00001"
+await sdk.transfer(receiverIdentifier, amount)
+```
+
+Lastly, open the withdraw UI in the same way as deposit and login:
+```javascript
+await sdk.withdraw();
 ```
