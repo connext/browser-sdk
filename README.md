@@ -8,7 +8,7 @@ The SDK supports the following features:
 - 💳 Debit card on/offboarding via ________.
 - ⛽ End-to-end Ethereum gas (transaction fee) abstraction.
 - 💵 Transfers denoted in USD, with optional customizeability to other currencies.
-- 🦊 Logins using popular Ethereum wallets such as [Metamask](https://metamask.io). (coming soon!)
+- 🦊 Logins using any popular Ethereum wallet such as [Metamask](https://metamask.io). (coming soon!)
 
 ### Table of Contents
 - Installation
