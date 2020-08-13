@@ -21,7 +21,7 @@ The SDK supports the following features:
 You can install the SDK using npm:
 
 ```bash
-npm i connext
+npm i --save connext
 ```
 
 ## Quick Start
@@ -62,7 +62,7 @@ await sdk.withdraw();
 ## Advanced Configuration
 By default the browser SDK uses Dai, a USD-stable Ethereum token and connects to our bootstrap Connext node on testnet or mainnet.
 
-You can use the SDK with a custom Connext node and/or token too -- just pass in these params when instantiating:
+You can use the SDK with [your own Connext node](https://docs.connext.network/en/latest/how-to/deploy-indra.html) and/or token too -- just pass in the following when instantiating:
 ```javascript
 const sdk = new SDK({
       assetId: "0xabc123..." // Token address (0x0 for Eth)
@@ -73,3 +73,13 @@ const sdk = new SDK({
 
 ## API Reference
 
+|           Method          |                Example               |                               Description                              |                                                                                     Params                                                                                     |                    Response                    |
+|:-------------------------:|:------------------------------------:|:----------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------:|
+|       instantiation       | `const sdk = new SDK('production');` | Instantiates SDK with provided config (defaulting to `'sandbox'` mode) | Either of:  String: `'production'`  or: ConfigObject: {    `assetId`: token address or 0x0 for Eth    `ethProviderUrl`: Ethereum node RPC url    `nodeUrl`: Connext node url } |                                                |
+|         `.login()`        |         `await sdk.login();`         |                           Opens the login UI                           |                                                                                                                                                                                |                                                |
+|    `.publicIdentifier`    |  `const id = sdk.publicIdentifier;`  |                                                                        |                                                                                                                                                                                | String unique identifier e.g. `indra123abc...` |
+|        `.deposit()`       |        `await sdk.deposit();`        |                          Opens the deposit UI                          |                                                                                                                                                                                |                                                |
+|       `.withdraw()`       |        `await sdk.withdraw();`       |                          Opens the withdraw UI                         |                                                                                                                                                                                |                                                |
+|        `.balance()`       |        `await sdk.balance();`        |                         Gets the user's balance                        |                                                                                                                                                                                | String e.g. `0.12456`                          |
+|       `.transfer()`       |   `await sdk.transfer(id, amount);`  |             Sends amount to the specified public identifier            | - String: public identifier of recipient - String: amount to send                                                                                                              |                                                |
+| `getTransactionHistory()` | `await sdk.getTransactionHistory();` |                 Gets a history of previous transactions                |                                                                                                                                                                                | //TODO                                         |
