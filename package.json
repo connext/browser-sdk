@@ -18,7 +18,7 @@
     "bootstrap:example": "cd example-frontend && npm install",
     "bootstrap:frontend": "run-s bootstrap:iframe bootstrap:example",
     "bootstrap:packages": "lerna bootstrap --hoist",
-    "bootstrap": "npm install && run-s bootstrap:frontend bootstrap:packages",
+    "bootstrap": "npm install && run-s bootstrap:packages bootstrap:frontend",
     "clean:build": "lerna exec -- rm -rf dist",
     "clean:plock": "lerna exec -- rm -rf package-lock.json",
     "clean:modules": "lerna exec -- rm -rf node_modules",

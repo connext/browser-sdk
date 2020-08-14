@@ -4,7 +4,7 @@
   "description": "Example for Connext Browser SDK",
   "private": true,
   "dependencies": {
-    "@connext/client": "^7.2.2",
+    "@connext/browser-sdk": "file:../packages/browser-sdk",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
