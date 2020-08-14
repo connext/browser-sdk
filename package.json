@@ -31,7 +31,7 @@
     "test": "lerna run test",
     "lint": "eslint -c './.eslintrc' --fix 'packages/*/**/*.ts'",
     "check": "run-s clean:build lint build test",
-    "start:iframe": "cd iframe-frontend && PORT=3030 npm run start",
+    "start:iframe": "cd iframe-frontend && BROWSER=none PORT=3030 npm run start",
     "start:example": "cd example-frontend && PORT=3040 npm run start",
     "start:frontend": "concurrently \"npm run start:iframe\" \"npm run start:example\"",
     "start": "run-s check start:frontend"
