@@ -1,0 +1,16 @@
+@font-face {
+  font-family: cozette;
+  src: url('/CozetteVector.ttf');
+}
+
+body {
+  margin: 0;
+  font-family: cozette;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

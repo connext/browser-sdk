@@ -1,0 +1,42 @@
+.App {
+  text-align: left;
+  background-image: url("/lighthouse.jpg");
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  letter-spacing: 2px;
+}
+
+.Content {
+  margin: 30vh 10vw;
+}
+
+.Content h4 {
+  font-weight: 100;
+}
+
+.Content h1 {
+  font-weight: 500;
+}
+
+.Content h3 {
+  font-weight: 500;
+  color: #353fff;
+}
+
+.Content button {
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  padding: 0.8em 4em;
+  font-size: 1em;
+  border-style: none;
+  border: none;
+  border-radius: 8px;
+  color: black;
+  background: white;
+  outline: none;
+  border: 1px solid black;
+}
