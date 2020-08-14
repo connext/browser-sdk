@@ -1,0 +1,1 @@
+browser-sdk/dist/connext.js

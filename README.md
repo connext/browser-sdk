@@ -83,3 +83,16 @@ const sdk = new SDK({
 |        `.balance()`       |        `await sdk.balance();`        |                         Gets the user's balance                        |                                                                                                                                                                                | String e.g. `0.12456`        |
 |       `.transfer()`       |   `await sdk.transfer(id, amount);`  |             Sends amount to the specified public identifier            | - String: public identifier of recipient - String: amount to send                                                                                                              |                              |
 | `getTransactionHistory()` | `await sdk.getTransactionHistory();` |                 Gets a history of previous transactions                |                                                                                                                                                                                | //TODO                       |
+### Development
+To work on the Connext Browser SDK itself:
+
+```bash
+$ git clone git@github.com:connext/browser-sdk.git
+$ make build-and-watch-sdk
+```
+
+Now, you should be able to open the demo and test like so:
+
+```bash
+$ make serve-demo-app
+```
