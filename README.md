@@ -5,7 +5,7 @@ The Connext Browser SDK is the simplest way to add micropayments to any web app.
 
 The SDK supports the following features:
 - 🎩 Email-based login via [Magic](https://magic.link).
-- 💳 Debit card on/offboarding via ________.
+- 💳 Debit card on/offboarding via [Moonpay](https://moonpay.io).
 - ⛽ End-to-end Ethereum gas (transaction fee) abstraction.
 - 💵 Transfers in USD by default, with optional customizeability to other currencies.
 - 🦊 Login using any popular Ethereum wallet such as [Metamask](https://metamask.io). (coming soon!)
