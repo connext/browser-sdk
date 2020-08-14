@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    // reference: https://aka.ms/tsconfig.json
+    "target": "es5",  // target ECMAScript 5 as build output
+    "module": "ESNext",  // compile to an ESNext module
+    "jsx": "react",  // use React-style JSX parsing
+    "outDir": "./dist",  // output build artifacts to the dist/ folder
+    "strict": true,  // enable strict type checking
+    "esModuleInterop": true,
+  }
+}
