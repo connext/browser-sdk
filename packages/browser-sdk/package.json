@@ -44,5 +44,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@connext/iframe-channel-provider": "^1.0.0"
+  }
 }
