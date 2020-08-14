@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "name": "@connext/iframe-frontend",
-  "description": "Frontend for Iframe",
+  "name": "example",
+  "description": "Example for Connext Browser SDK",
   "private": true,
   "dependencies": {
     "@connext/client": "^7.2.2",
