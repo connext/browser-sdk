@@ -11,6 +11,6 @@ browser-sdk/node_modules:
 
 .PHONY: serve-demo-app
 serve-demo-app:
-	ln --symbolic --force browser-sdk/dist/connext.js demo-app/connext.js  # make the compiled browser SDK available for importing into the demo app
+	cd demo-app && ln --symbolic --force ../browser-sdk/dist/connext.js connext.js  # make the compiled browser SDK available for importing into the demo app
 	echo "Serving app on http://localhost:8000/..."
 	cd demo-app && python3 -m http.server

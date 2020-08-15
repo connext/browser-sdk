@@ -1,1 +1,1 @@
-browser-sdk/dist/connext.js
+../browser-sdk/dist/connext.js
