@@ -6,6 +6,7 @@
     "jsx": "react",  // use React-style JSX parsing
     "outDir": "./dist",  // output build artifacts to the dist/ folder
     "strict": true,  // enable strict type checking
+    "declaration": true,
     "esModuleInterop": true,
   }
 }

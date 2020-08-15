@@ -1,8 +1,11 @@
 import React from "react";
 import "./App.css";
+import connext from '@connext/browser-sdk';
 
 function App() {
-  const handleClick = () => {}
+  const handleClick = async () => {
+    await connext.login();
+  }
   return (
     <div className="App">
       <div className="Content">

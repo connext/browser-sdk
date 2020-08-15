@@ -3,7 +3,8 @@
   "name": "@connext/browser-sdk",
   "version": "1.0.0",
   "description": "Browser SDK for Connext",
-  "main": "dist/connext.js",
+  "main": "./dist/connext.js",
+  "types": "./dist/connext.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c",
@@ -31,6 +32,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "magic-sdk": "^2.4.7",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }
