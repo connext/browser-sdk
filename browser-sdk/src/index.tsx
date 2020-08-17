@@ -5,7 +5,12 @@ import { Magic } from "magic-sdk";
 
 import Modal from "./components/Modal";
 // import IframeChannelProvider from "./channel-provider";
-import { MAGIC_LINK_PUBLISHABLE_KEY, RINKEBY_NETWORK } from "./constants";
+import {
+  MAGIC_LINK_PUBLISHABLE_KEY,
+  RINKEBY_NETWORK,
+  // DEFAULT_IFRAME_ID,
+  // DEFAULT_IFRAME_SRC,
+} from "./constants";
 import {
   ConnextSDKOptions,
   IConnextTransaction,
@@ -19,7 +24,12 @@ class ConnextSDK {
   public magic: Magic | undefined;
 
   constructor(opts?: ConnextSDKOptions) {
-    // this.channelProvider = opts?.channelProvider || new IframeChannelProvider();
+    // this.channelProvider =
+    //   opts?.channelProvider ||
+    //   new IframeChannelProvider({
+    //     id: DEFAULT_IFRAME_ID,
+    //     src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
+    //   });
     this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
       network: (opts?.network as any) || RINKEBY_NETWORK,
     });

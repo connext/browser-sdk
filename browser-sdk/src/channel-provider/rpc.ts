@@ -1,8 +1,15 @@
 import EventEmitter from "eventemitter3";
 import { JsonRpcRequest } from "@connext/types";
 
+import { renderElement, IframeAttributes } from "../helpers";
+
 class IframeRpcConnection extends EventEmitter {
   public connected = false;
+
+  constructor(iframeAttributes: IframeAttributes) {
+    super();
+    renderElement("iframe", iframeAttributes);
+  }
 
   public async send(payload: JsonRpcRequest): Promise<any> {
     // TODO: send payloads through postMessage
