@@ -20,17 +20,7 @@ class Modal extends React.Component<{}, IState> {
 
   render() {
     return (
-      <div
-        style={{
-          pointerEvents: "auto",
-          position: "absolute",
-          bottom: "1em",
-          right: "1em",
-          background: "white",
-          padding: "2em",
-          borderRadius: "1em",
-        }}
-      >
+      <div id="connext-overlay-modal">
         {
           this.state.mode === "DEPOSIT" ?
             <DepositModal /> :
