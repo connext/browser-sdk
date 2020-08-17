@@ -41,10 +41,10 @@ class Modal extends React.Component<{}, IState> {
     this.setState({ mode: "WITHDRAW" });
   }
 
-  showTransferUI(recipientPublicIdentifier: string, amount: string) {
+  showTransferUI(recipient: string, amount: string) {
     this.setState({
       mode: "TRANSFER",
-      transferRecipient: recipientPublicIdentifier,
+      transferRecipient: recipient,
       transferAmount: amount,
     });
   }

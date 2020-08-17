@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 // import { ChannelProvider } from "@connext/channel-provider";
 
-import Modal from "./Modal";
+import Modal from "./components/Modal";
 // import IframeChannelProvider from "./channel-provider";
 import { MAGIC_LINK_PUBLISHABLE_KEY, RINKEBY_NETWORK } from "./constants";
 import {
@@ -87,16 +87,13 @@ class ConnextSDK {
     return "0.00";
   }
 
-  public async transfer(
-    recipientPublicIdentifier: string,
-    amount: string
-  ): Promise<boolean> {
+  public async transfer(recipient: string, amount: string): Promise<boolean> {
     if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    this.modal.showTransferUI(recipientPublicIdentifier, amount);
+    this.modal.showTransferUI(recipient, amount);
     return false;
   }
 
