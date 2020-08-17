@@ -1,39 +1,39 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Magic } from 'magic-sdk';
+import React from "react";
+import ReactDOM from "react-dom";
+import { Magic } from "magic-sdk";
 
-import App from './App';
-import { MAGIC_LINK_PUBLISHABLE_KEY } from './constants';
+import App from "./App";
+import { MAGIC_LINK_PUBLISHABLE_KEY } from "./constants";
 
 let APP_COMPONENT: App | null = null;
 const MAGIC_LINK_CLIENT = new Magic(MAGIC_LINK_PUBLISHABLE_KEY, {
-    network: 'rinkeby',
+  network: "rinkeby",
 });
 
 // custom error class for errors at the developer-SDK boundary
 class SDKError extends Error {
-    constructor(message: string) {
-      super(message);
-      this.name = "SDKError";
-    }
+  constructor(message: string) {
+    super(message);
+    this.name = "SDKError";
+  }
 }
 
 interface IConnextTransaction {
-    recipientPublicIdentifier: string;
-    amount: string;
-    timestamp: Date;
+  recipientPublicIdentifier: string;
+  amount: string;
+  timestamp: Date;
 }
-
-function initializeOverlay() {
+class ConnextSDK {
+  public initializeOverlay() {
     if (APP_COMPONENT !== null) {
-        return;
+      return;
     }
     const overlay = document.createElement("div");
-    overlay.id = 'connext-overlay';
+    overlay.id = "connext-overlay";
     document.body.appendChild(overlay);
 
     // style the overlay element
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
         #connext-overlay {
             position: fixed;
@@ -48,51 +48,60 @@ function initializeOverlay() {
     `;
 
     document.head.appendChild(style);
-    APP_COMPONENT = ReactDOM.render(<App />, overlay) as unknown as App;
-}
+    APP_COMPONENT = (ReactDOM.render(<App />, overlay) as unknown) as App;
+  }
 
-async function login(): Promise<boolean> {
-    initializeOverlay();
+  public async login(): Promise<boolean> {
+    this.initializeOverlay();
 
     // TODO: magic link
 
     return true;
-}
+  }
 
-async function publicIdentifier(): Promise<string | null> {
+  public async publicIdentifier(): Promise<string | null> {
     return null;
-}
+  }
 
-async function deposit(): Promise<boolean> {
+  public async deposit(): Promise<boolean> {
     if (APP_COMPONENT === null) {
-        throw new SDKError('Overlay UI not initialized - make sure to await login() first before calling deposit()!');
+      throw new SDKError(
+        "Overlay UI not initialized - make sure to await login() first before calling deposit()!"
+      );
     }
     APP_COMPONENT.showDepositUI();
     return false;
-}
+  }
 
-async function withdraw(): Promise<boolean> {
+  public async withdraw(): Promise<boolean> {
     if (APP_COMPONENT === null) {
-        throw new SDKError('Overlay UI not initialized - make sure to await login() first before calling withdraw()!');
+      throw new SDKError(
+        "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
+      );
     }
     APP_COMPONENT.showWithdrawUI();
     return false;
-}
+  }
 
-async function balance(): Promise<string> {
-    return '0.00';
-}
+  public async balance(): Promise<string> {
+    return "0.00";
+  }
 
-async function transfer(recipientPublicIdentifier: string, amount: string): Promise<boolean> {
+  public async transfer(
+    recipientPublicIdentifier: string,
+    amount: string
+  ): Promise<boolean> {
     if (APP_COMPONENT === null) {
-        throw new SDKError('Overlay UI not initialized - make sure to await login() first before calling withdraw()!');
+      throw new SDKError(
+        "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
+      );
     }
     APP_COMPONENT.showTransferUI(recipientPublicIdentifier, amount);
     return false;
-}
+  }
 
-async function getTransactionHistory(): Promise<Array<IConnextTransaction>> {
+  public async getTransactionHistory(): Promise<Array<IConnextTransaction>> {
     return [];
+  }
 }
-
-export default { login, publicIdentifier, deposit, withdraw, balance, transfer, getTransactionHistory };
+export default ConnextSDK;
