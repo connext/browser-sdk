@@ -34,6 +34,7 @@
   "dependencies": {
     "@connext/channel-provider": "^7.3.2",
     "@connext/types": "^7.3.2",
+    "eventemitter3": "4.0.4",
     "magic-sdk": "^2.4.7",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"

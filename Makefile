@@ -1,5 +1,5 @@
-.PHONY: brower-sdk-demo
-brower-sdk-demo:
+.PHONY: browser-sdk-demo
+browser-sdk-demo: browser-sdk
 	cd browser-sdk && PORT=8000 npx serve .
 
 .PHONY: browser-sdk-watch

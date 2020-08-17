@@ -1,20 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
-// import { ChannelProvider } from "@connext/channel-provider";
+import { ChannelProvider } from "@connext/channel-provider";
 
 import Modal from "./Modal";
 import { MAGIC_LINK_PUBLISHABLE_KEY } from "./constants";
 import { ConnextSDKOptions, IConnextTransaction, SDKError } from "./helpers";
-// import IframeChannelProvider from "./channel-provider";
+import IframeChannelProvider from "./channel-provider";
 
 class ConnextSDK {
-  // public channelProvider: ChannelProvider;
+  public channelProvider: ChannelProvider;
   public modal: Modal | undefined;
   public magic: Magic | undefined;
 
   constructor(opts?: ConnextSDKOptions) {
-    // this.channelProvider = opts?.channelProvider || new IframeChannelProvider();
+    this.channelProvider = opts?.channelProvider || new IframeChannelProvider();
     this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
       network: (opts?.network as any) || "rinkeby",
     });

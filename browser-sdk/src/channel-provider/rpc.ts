@@ -1,16 +1,8 @@
-import {
-  ConnextEventEmitter,
-  IRpcConnection,
-  JsonRpcRequest,
-} from "@connext/types";
+import EventEmitter from "eventemitter3";
+import { JsonRpcRequest } from "@connext/types";
 
-class IframeRpcConnection extends ConnextEventEmitter
-  implements IRpcConnection {
+class IframeRpcConnection extends EventEmitter {
   public connected = false;
-
-  constructor() {
-    super();
-  }
 
   public async send(payload: JsonRpcRequest): Promise<any> {
     // TODO: send payloads through postMessage

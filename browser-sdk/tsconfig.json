@@ -1,12 +1,34 @@
 {
+  "include": ["./src/**/*"],
   "compilerOptions": {
-    // reference: https://aka.ms/tsconfig.json
-    "target": "es5",  // target ECMAScript 5 as build output
-    "module": "ESNext",  // compile to an ESNext module
-    "jsx": "react",  // use React-style JSX parsing
-    "outDir": "./dist",  // output build artifacts to the dist/ folder
-    "strict": true,  // enable strict type checking
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true,
     "declaration": true,
+    "declarationMap": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "target": "es5",
+    "module": "ESNext",
+    "jsx": "react",
+    "outDir": "./dist",
+    "strict": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noFallthroughCasesInSwitch": true,
+    "noLib": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true
   }
 }
