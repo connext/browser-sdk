@@ -6,7 +6,6 @@
   "main": "./dist/connext.js",
   "types": "./dist/connext.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c",
     "build-and-watch": "rollup -c -w"
   },
