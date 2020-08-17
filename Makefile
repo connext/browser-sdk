@@ -1,7 +1,6 @@
 .PHONY: demo-sdk-basic
 demo-sdk-basic:
-	echo "Serving basic SDK demo at: http://localhost:8000/demo.html"
-	cd browser-sdk && python3 -m http.server
+	cd browser-sdk && PORT=8000 npx serve .
 
 .PHONY: build-and-watch-sdk
 build-and-watch-sdk: browser-sdk/node_modules
