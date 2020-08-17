@@ -6,8 +6,8 @@ demo-sdk-basic:
 build-and-watch-sdk: browser-sdk/node_modules
 	cd browser-sdk && npm run build-and-watch
 
-.PHONY: build-sdk
-build-sdk: browser-sdk/node_modules
+.PHONY: browser-sdk
+browser-sdk: browser-sdk/node_modules
 	cd browser-sdk && npm run build
 
 browser-sdk/node_modules:
