@@ -4,7 +4,7 @@ import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
 
 import Modal from "./Modal";
-import { MAGIC_LINK_PUBLISHABLE_KEY } from "./constants";
+import { MAGIC_LINK_PUBLISHABLE_KEY, RINKEBY_NETWORK } from "./constants";
 import { ConnextSDKOptions, IConnextTransaction, SDKError } from "./helpers";
 import IframeChannelProvider from "./channel-provider";
 
@@ -16,7 +16,7 @@ class ConnextSDK {
   constructor(opts?: ConnextSDKOptions) {
     this.channelProvider = opts?.channelProvider || new IframeChannelProvider();
     this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
-      network: (opts?.network as any) || "rinkeby",
+      network: (opts?.network as any) || RINKEBY_NETWORK,
     });
   }
 
