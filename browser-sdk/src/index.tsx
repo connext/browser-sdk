@@ -8,6 +8,7 @@ import Modal from "./components/Modal";
 import {
   MAGIC_LINK_PUBLISHABLE_KEY,
   RINKEBY_NETWORK,
+  STYLE_CONNEXT_OVERLAY,
   // DEFAULT_IFRAME_ID,
   // DEFAULT_IFRAME_SRC,
 } from "./constants";
@@ -39,24 +40,7 @@ class ConnextSDK {
     if (typeof this.modal !== "undefined") {
       return;
     }
-    renderElement(
-      "style",
-      {
-        innerHTML: `
-          #connext-overlay {
-              position: fixed;
-              top: 0; bottom: 0; left: 0; right: 0;
-              z-index: 999;
-              pointer-events: none;
-          }
-          #connext-overlay * {
-              /* reset all CSS styles for elements inside the overlay, as a way to "sandbox" the overlay UI from the parent page without using an iframe */
-              all: unset;
-          }
-        `,
-      },
-      "head"
-    );
+    renderElement("style", { innerHTML: STYLE_CONNEXT_OVERLAY }, "head");
     const overlay = renderElement("div", { id: "connext-overlay" });
     this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
   }
