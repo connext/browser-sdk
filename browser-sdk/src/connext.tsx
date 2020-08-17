@@ -2,10 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 
-import App from "./App";
+import Modal from "./Modal";
 import { MAGIC_LINK_PUBLISHABLE_KEY } from "./constants";
 
-let APP_COMPONENT: App | null = null;
+let MODAL_COMPONENT: Modal | null = null;
 const MAGIC_LINK_CLIENT = new Magic(MAGIC_LINK_PUBLISHABLE_KEY, {
   network: "rinkeby",
 });
@@ -25,7 +25,7 @@ interface IConnextTransaction {
 }
 class ConnextSDK {
   public initializeOverlay() {
-    if (APP_COMPONENT !== null) {
+    if (MODAL_COMPONENT !== null) {
       return;
     }
     const overlay = document.createElement("div");
@@ -48,7 +48,7 @@ class ConnextSDK {
     `;
 
     document.head.appendChild(style);
-    APP_COMPONENT = (ReactDOM.render(<App />, overlay) as unknown) as App;
+    MODAL_COMPONENT = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
   }
 
   public async login(): Promise<boolean> {
@@ -64,22 +64,22 @@ class ConnextSDK {
   }
 
   public async deposit(): Promise<boolean> {
-    if (APP_COMPONENT === null) {
+    if (MODAL_COMPONENT === null) {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    APP_COMPONENT.showDepositUI();
+    MODAL_COMPONENT.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (APP_COMPONENT === null) {
+    if (MODAL_COMPONENT === null) {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    APP_COMPONENT.showWithdrawUI();
+    MODAL_COMPONENT.showWithdrawUI();
     return false;
   }
 
@@ -91,12 +91,12 @@ class ConnextSDK {
     recipientPublicIdentifier: string,
     amount: string
   ): Promise<boolean> {
-    if (APP_COMPONENT === null) {
+    if (MODAL_COMPONENT === null) {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    APP_COMPONENT.showTransferUI(recipientPublicIdentifier, amount);
+    MODAL_COMPONENT.showTransferUI(recipientPublicIdentifier, amount);
     return false;
   }
 
