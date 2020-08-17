@@ -1,31 +1,27 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
+// import { ChannelProvider } from "@connext/channel-provider";
 
 import Modal from "./Modal";
 import { MAGIC_LINK_PUBLISHABLE_KEY } from "./constants";
+import { ConnextSDKOptions, IConnextTransaction, SDKError } from "./helpers";
+// import IframeChannelProvider from "./channel-provider";
 
-let MODAL_COMPONENT: Modal | null = null;
-const MAGIC_LINK_CLIENT = new Magic(MAGIC_LINK_PUBLISHABLE_KEY, {
-  network: "rinkeby",
-});
-
-// custom error class for errors at the developer-SDK boundary
-class SDKError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "SDKError";
-  }
-}
-
-interface IConnextTransaction {
-  recipientPublicIdentifier: string;
-  amount: string;
-  timestamp: Date;
-}
 class ConnextSDK {
+  // public channelProvider: ChannelProvider;
+  public modal: Modal | undefined;
+  public magic: Magic | undefined;
+
+  constructor(opts?: ConnextSDKOptions) {
+    // this.channelProvider = opts?.channelProvider || new IframeChannelProvider();
+    this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
+      network: (opts?.network as any) || "rinkeby",
+    });
+  }
+
   public initializeOverlay() {
-    if (MODAL_COMPONENT !== null) {
+    if (typeof this.modal !== "undefined") {
       return;
     }
     const overlay = document.createElement("div");
@@ -48,7 +44,7 @@ class ConnextSDK {
     `;
 
     document.head.appendChild(style);
-    MODAL_COMPONENT = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
+    this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
   }
 
   public async login(): Promise<boolean> {
@@ -64,22 +60,22 @@ class ConnextSDK {
   }
 
   public async deposit(): Promise<boolean> {
-    if (MODAL_COMPONENT === null) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    MODAL_COMPONENT.showDepositUI();
+    this.modal.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (MODAL_COMPONENT === null) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    MODAL_COMPONENT.showWithdrawUI();
+    this.modal.showWithdrawUI();
     return false;
   }
 
@@ -91,12 +87,12 @@ class ConnextSDK {
     recipientPublicIdentifier: string,
     amount: string
   ): Promise<boolean> {
-    if (MODAL_COMPONENT === null) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    MODAL_COMPONENT.showTransferUI(recipientPublicIdentifier, amount);
+    this.modal.showTransferUI(recipientPublicIdentifier, amount);
     return false;
   }
 

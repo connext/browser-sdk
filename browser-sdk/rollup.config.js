@@ -5,7 +5,7 @@ import replace from "@rollup/plugin-replace";
 import pkg from "./package.json";
 
 export default {
-  input: "./src/connext.tsx",
+  input: "./src/index.tsx",
   output: [{ file: pkg.main, format: "umd", name: "ConnextSDK" }],
   plugins: [
     nodeResolve(), // resolve module names using node_modules and the standard Node module resolution algorithm
