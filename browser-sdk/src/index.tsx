@@ -4,9 +4,14 @@ import { Magic } from "magic-sdk";
 // import { ChannelProvider } from "@connext/channel-provider";
 
 import Modal from "./Modal";
-import { MAGIC_LINK_PUBLISHABLE_KEY, RINKEBY_NETWORK } from "./constants";
-import { ConnextSDKOptions, IConnextTransaction, SDKError } from "./helpers";
 // import IframeChannelProvider from "./channel-provider";
+import { MAGIC_LINK_PUBLISHABLE_KEY, RINKEBY_NETWORK } from "./constants";
+import {
+  ConnextSDKOptions,
+  IConnextTransaction,
+  SDKError,
+  renderElement,
+} from "./helpers";
 
 class ConnextSDK {
   // public channelProvider: ChannelProvider;
@@ -20,35 +25,34 @@ class ConnextSDK {
     });
   }
 
-  public initializeOverlay() {
+  public render() {
     if (typeof this.modal !== "undefined") {
       return;
     }
-    const overlay = document.createElement("div");
-    overlay.id = "connext-overlay";
-    document.body.appendChild(overlay);
-
-    // style the overlay element
-    const style = document.createElement("style");
-    style.innerHTML = `
-        #connext-overlay {
-            position: fixed;
-            top: 0; bottom: 0; left: 0; right: 0;
-            z-index: 999;
-            pointer-events: none;
-        }
-        #connext-overlay * {
-            /* reset all CSS styles for elements inside the overlay, as a way to "sandbox" the overlay UI from the parent page without using an iframe */
-            all: unset;
-        }
-    `;
-
-    document.head.appendChild(style);
+    renderElement(
+      "style",
+      {
+        innerHTML: `
+          #connext-overlay {
+              position: fixed;
+              top: 0; bottom: 0; left: 0; right: 0;
+              z-index: 999;
+              pointer-events: none;
+          }
+          #connext-overlay * {
+              /* reset all CSS styles for elements inside the overlay, as a way to "sandbox" the overlay UI from the parent page without using an iframe */
+              all: unset;
+          }
+        `,
+      },
+      "head"
+    );
+    const overlay = renderElement("div", { id: "connext-overlay" });
     this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
   }
 
   public async login(): Promise<boolean> {
-    this.initializeOverlay();
+    this.render();
 
     // TODO: magic link
 
