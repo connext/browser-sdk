@@ -19,3 +19,10 @@ demo-app: demo-app/node_modules
 
 demo-app/node_modules:
 	cd demo-app && npm install && touch node_modules
+
+.PHONY: iframe-app
+iframe-app: iframe-app/node_modules
+	cd iframe-app && npm start
+
+iframe-app/node_modules:
+	cd iframe-app && npm install && touch node_modules
