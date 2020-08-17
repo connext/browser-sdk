@@ -23,6 +23,10 @@ class ConnextSDK {
   // public channelProvider: ChannelProvider;
   public modal: Modal | undefined;
   public magic: Magic | undefined;
+  private isLoggedIn: boolean;
+  private userIssuer: string | null;
+  private userEmail: string | null;
+  private userPublicAddress: string | null;
 
   constructor(opts?: ConnextSDKOptions) {
     // this.channelProvider =
@@ -31,24 +35,44 @@ class ConnextSDK {
     //     id: DEFAULT_IFRAME_ID,
     //     src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
     //   });
+    this.isLoggedIn = false;
+    this.userIssuer = null;
+    this.userEmail = null;
+    this.userPublicAddress = null;
     this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
       network: (opts?.network as any) || RINKEBY_NETWORK,
     });
   }
 
-  public render() {
+  render() {
     if (typeof this.modal !== "undefined") {
       return;
     }
     renderElement("style", { innerHTML: STYLE_CONNEXT_OVERLAY }, "head");
     const overlay = renderElement("div", { id: "connext-overlay" });
-    this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
+    this.modal = (ReactDOM.render(
+      <Modal
+        magic={this.magic}
+        isLoggedIn={this.isLoggedIn}
+        setIsLoggedIn={e => {this.isLoggedIn = e}}
+        userIssuer={this.userIssuer}
+        setUserIssuer={e => {this.userIssuer = e}}
+        userEmail={this.userEmail}
+        setUserEmail={e => {this.userEmail = e}}
+        userPublicAddress={this.userPublicAddress}
+        setUserPublicAddress={e => {this.userPublicAddress = e}}
+      />, overlay) as unknown) as Modal;
   }
 
   public async login(): Promise<boolean> {
+    // const loginToken = await this.magic?.auth.loginWithMagicLink({ email: 'wangqile123@gmail.com' });
+    // const isLoggedIn = await this.magic?.user.isLoggedIn()
+    // const metadata = await this.magic?.user.getMetadata();
+    // console.log(isLoggedIn, metadata);
     this.render();
-
-    // TODO: magic link
+    // await the login result from this.modal.login()
+    // set up the modal's isLoggedIn feature
+    // from there, return the result of the login here.
 
     return true;
   }
@@ -62,6 +86,11 @@ class ConnextSDK {
       throw new SDKError(
         "Overlay UI not initialized - make sure to await login() first before calling deposit()!"
       );
+    }
+    else if (!this.isLoggedIn) {
+      throw new SDKError(
+        "User not logged in - please log in before calling deposit()!"
+      )
     }
     this.modal.showDepositUI();
     return false;
