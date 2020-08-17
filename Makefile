@@ -1,9 +1,9 @@
-.PHONY: demo-sdk-basic
-demo-sdk-basic:
+.PHONY: brower-sdk-demo
+brower-sdk-demo:
 	cd browser-sdk && PORT=8000 npx serve .
 
-.PHONY: build-and-watch-sdk
-build-and-watch-sdk: browser-sdk/node_modules
+.PHONY: browser-sdk-watch
+browser-sdk-watch: browser-sdk/node_modules
 	cd browser-sdk && npm run build-and-watch
 
 .PHONY: browser-sdk
@@ -26,3 +26,7 @@ iframe-app: iframe-app/node_modules
 
 iframe-app/node_modules:
 	cd iframe-app && npm install && touch node_modules
+
+.PHONY: start
+start:
+	make -j 2 iframe-app demo-app
