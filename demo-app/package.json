@@ -10,7 +10,7 @@
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
     "typescript": "~3.7.2",
-    "@connext/browser-sdk": "../browser-sdk"
+    "@connext/browser-sdk": "file:../browser-sdk"
   },
   "scripts": {
     "start": "react-scripts start",
