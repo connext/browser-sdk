@@ -6,6 +6,7 @@ function App() {
   const connext = new ConnextSDK();
   const handleClick = async () => {
     await connext.login();
+    await connext.deposit();
   };
   return (
     <div className="App">

@@ -1,4 +1,6 @@
 import React from "react";
+import DepositModal from "./DepositModal";
+import WithdrawModal from "./WithdrawModal";
 
 interface IState {
   mode: string;
@@ -22,13 +24,20 @@ class Modal extends React.Component<{}, IState> {
         style={{
           pointerEvents: "auto",
           position: "absolute",
-          bottom: "0",
-          right: "0",
-          maxWidth: "20em",
-          background: "red",
+          bottom: "1em",
+          right: "1em",
+          background: "white",
+          padding: "2em",
+          borderRadius: "1em",
         }}
       >
-        Hello World! {this.state.mode}
+        {
+          this.state.mode === "DEPOSIT" ?
+            <DepositModal /> :
+            this.state.mode === "WITHDRAW" ?
+            <WithdrawModal />:
+            <div>Hello World! {this.state.mode}</div>
+        }
       </div>
     );
   }
