@@ -80,7 +80,7 @@ export class IframeProvider extends EventEmitter {
     const iframeOrigin = new URL(this.opts.src).origin;
     if (e.origin === iframeOrigin) {
       if (e.data.startsWith("event:")) {
-        const event = e.data.replace("event:");
+        const event = e.data.replace("event:", "");
         this.emit(event);
       } else {
         const payload = JSON.parse(e.data);
