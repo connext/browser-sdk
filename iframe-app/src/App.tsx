@@ -5,6 +5,7 @@ import { utils } from "ethers";
 
 class App extends React.Component {
   private channel: IConnextClient | undefined;
+  private parentOrigin: string | undefined;
 
   async handleRequest(request: JsonRpcRequest) {
     const channel = this.channel as IConnextClient;
@@ -56,40 +57,36 @@ class App extends React.Component {
     return result;
   }
 
+  async handleIncomingMessages(e: MessageEvent) {
+    if (e.origin !== this.parentOrigin) return;
+    const request = JSON.parse(e.data);
+    let response: any;
+    try {
+      const result = await this.handleRequest(request);
+      response = {
+        id: request.id,
+        result,
+      };
+    } catch (e) {
+      response = {
+        id: request.id,
+        error: {
+          message: e.message,
+        },
+      };
+    }
+    window.parent.postMessage(JSON.stringify(response), this.parentOrigin);
+  }
+
   async componentDidMount() {
-    const parentOrigin = new URL(document.referrer).origin;
+    this.parentOrigin = new URL(document.referrer).origin;
     this.channel = await connext.connect("rinkeby");
     window.addEventListener(
       "message",
-      async (e) => {
-        if (e.origin === parentOrigin) {
-          const request = JSON.parse(e.data);
-          try {
-            const result = await this.handleRequest(request);
-
-            window.parent.postMessage(
-              JSON.stringify({
-                id: request.id,
-                result,
-              }),
-              parentOrigin
-            );
-          } catch (e) {
-            window.parent.postMessage(
-              JSON.stringify({
-                id: request.id,
-                error: {
-                  message: e.message,
-                },
-              }),
-              parentOrigin
-            );
-          }
-        }
-      },
+      (e) => this.handleIncomingMessages(e),
       true
     );
-    window.parent.postMessage("event:iframe-initialized", parentOrigin);
+    window.parent.postMessage("event:iframe-initialized", this.parentOrigin);
   }
 
   render() {
