@@ -1,52 +1,56 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
-// import { ChannelProvider } from "@connext/channel-provider";
+import { ChannelProvider } from "@connext/channel-provider";
+import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
-// import IframeChannelProvider from "./channel-provider";
 import {
+  DEFAULT_IFRAME_SRC,
   MAGIC_LINK_PUBLISHABLE_KEY,
-  RINKEBY_NETWORK,
-  STYLE_CONNEXT_OVERLAY,
-  // DEFAULT_IFRAME_ID,
-  // DEFAULT_IFRAME_SRC,
+  DEFAULT_NETWORK,
 } from "./constants";
-import {
-  ConnextSDKOptions,
-  IConnextTransaction,
-  SDKError,
-  renderElement,
-} from "./helpers";
+import { renderElement, sendToConnext } from "./helpers/util";
+import { ConnextSDKOptions, ConnextTransaction } from "./helpers/types";
+import { SDKError } from "./helpers/error";
+import IframeRpcConnection from "./helpers/rpc";
 
-class ConnextSDK {
-  // public channelProvider: ChannelProvider;
-  public modal: Modal | undefined;
-  public magic: Magic | undefined;
 
-  constructor(opts?: ConnextSDKOptions) {
-    // this.channelProvider =
-    //   opts?.channelProvider ||
-    //   new IframeChannelProvider({
-    //     id: DEFAULT_IFRAME_ID,
-    //     src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
-    //   });
-    this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
-      network: (opts?.network as any) || RINKEBY_NETWORK,
-    });
+const STYLE_CONNEXT_OVERLAY = `
+  #connext-overlay {
+      position: fixed;
+      top: 0; bottom: 0; left: 0; right: 0;
+      z-index: 999;
+      pointer-events: none;
+  }
+  #connext-overlay * {
+      /* reset all CSS styles for elements inside the overlay, as a way to "sandbox" the overlay UI from the parent page without using an iframe */
+      all: unset;
   }
 
-  public render() {
-    if (typeof this.modal !== "undefined") {
-      return;
-    }
-    renderElement("style", { innerHTML: STYLE_CONNEXT_OVERLAY }, "head");
-    const overlay = renderElement("div", { id: "connext-overlay" });
-    this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
+  #connext-iframe {
+    display: none;
+  }
+`;
+
+
+export class ConnextSDK {
+  public modal: Modal | undefined;
+  private magic: Magic | undefined;
+  private iframeUrl: string | undefined;
+  private iframeElem: HTMLIFrameElement | undefined;
+
+  private initialized = false;
+
+  constructor(opts?: ConnextSDKOptions) {
+    this.magic = new Magic(opts?.magicKey || MAGIC_LINK_PUBLISHABLE_KEY, {
+      network: (opts?.network as any) || DEFAULT_NETWORK,
+    });
+    this.iframeUrl = opts?.iframeSrc || DEFAULT_IFRAME_SRC;
   }
 
   public async login(): Promise<boolean> {
-    this.render();
+    await this.initialize();
 
     // TODO: magic link
 
@@ -54,45 +58,80 @@ class ConnextSDK {
   }
 
   public async publicIdentifier(): Promise<string | null> {
-    return null;
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling publicIdentifier()!");
+    }
+    return await sendToConnext({action: 'publicIdentifier'}, this.iframeElem as HTMLIFrameElement);
   }
 
   public async deposit(): Promise<boolean> {
-    if (typeof this.modal === "undefined") {
-      throw new SDKError(
-        "Overlay UI not initialized - make sure to await login() first before calling deposit()!"
-      );
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling deposit()!");
     }
-    this.modal.showDepositUI();
+    (this.modal as Modal).showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (typeof this.modal === "undefined") {
-      throw new SDKError(
-        "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
-      );
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling withdraw()!");
     }
-    this.modal.showWithdrawUI();
+    (this.modal as Modal).showWithdrawUI();
     return false;
   }
 
   public async balance(): Promise<string> {
-    return "0.00";
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling balance()!");
+    }
+    return await sendToConnext({action: 'balance'}, this.iframeElem as HTMLIFrameElement);
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (typeof this.modal === "undefined") {
-      throw new SDKError(
-        "Overlay UI not initialized - make sure to await login() first before calling withdraw()!"
-      );
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling transfer()!");
     }
-    this.modal.showTransferUI(recipient, amount);
+    (this.modal as Modal).showTransferUI(recipient, amount);
     return false;
   }
 
-  public async getTransactionHistory(): Promise<Array<IConnextTransaction>> {
-    return [];
+  public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
+    if (!this.initialized) {
+      throw new SDKError("Not initialized - make sure to await login() first before calling getTransactionHistory()!");
+    }
+    return await sendToConnext({action: 'getTransactionHistory'}, this.iframeElem as HTMLIFrameElement);
+  }
+
+  private async initialize() {
+    if (this.initialized) {
+      return;
+    }
+
+    // const client = await connext.connect({
+    //   channelProvider: new ChannelProvider(new IframeRpcConnection(this.iframeElem as HTMLIFrameElement)),
+    // })
+
+    // style all the elements we're injecting into the page
+    renderElement("style", { innerHTML: STYLE_CONNEXT_OVERLAY }, document.head);
+
+    // create the overlay UI container and render the UI inside it using React
+    const overlay = renderElement("div", { id: "connext-overlay" }, document.body);
+    this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
+
+    // create an invisible iframe that contains the Connext Browser SDK service
+    await new Promise(resolve => {
+      const iframeOrigin = (new URL(this.iframeUrl as string)).origin;
+      const receiveInitializedMessage = e => {
+        if (e.origin === iframeOrigin && e.data === "INITIALIZED") {
+          window.removeEventListener("message", receiveInitializedMessage);  // don't listen anymore, we've successfully initialized
+          resolve();
+        }
+      }
+      window.addEventListener("message", receiveInitializedMessage, false);
+      this.iframeElem = renderElement("iframe", { id: "connext-iframe", src: this.iframeUrl as string }, document.body) as HTMLIFrameElement;
+    });
+
+    // mark this SDK as fully initialized
+    this.initialized = true;
   }
 }
-export default ConnextSDK;

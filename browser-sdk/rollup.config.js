@@ -6,7 +6,7 @@ import pkg from "./package.json";
 
 export default {
   input: "./src/index.tsx",
-  output: [{ file: pkg.main, format: "umd", name: "ConnextSDK" }],
+  output: [{ file: pkg.main, format: "umd", name: "connext" }],
   plugins: [
     nodeResolve(), // resolve module names using node_modules and the standard Node module resolution algorithm
     commonjs(), // compile the module to CommonJS (required in order to support the UMD standard)
