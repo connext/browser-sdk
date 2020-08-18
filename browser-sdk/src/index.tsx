@@ -9,10 +9,8 @@ import {
   DEFAULT_MAGIC_KEY,
   DEFAULT_NETWORK,
 } from "./constants";
-import { renderElement } from "./helpers/util";
-import { ConnextSDKOptions, ConnextTransaction } from "./helpers/types";
-import { SDKError } from "./helpers/error";
-import IframeProvider from "./helpers/iframe";
+import { IframeProvider, renderElement, SDKError } from "./helpers";
+import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 
 export class ConnextSDK {
   public modal: Modal | undefined;
@@ -44,7 +42,7 @@ export class ConnextSDK {
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return this.iframeProvider.send({ action: "publicIdentifier" });
+    return this.iframeProvider.send({ method: "connext_publicIdentifier" });
   }
 
   public async deposit(): Promise<boolean> {
@@ -73,7 +71,7 @@ export class ConnextSDK {
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    return this.iframeProvider.send({ action: "balance" });
+    return this.iframeProvider.send({ method: "connext_balance" });
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
@@ -92,7 +90,9 @@ export class ConnextSDK {
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    return this.iframeProvider.send({ action: "getTransactionHistory" });
+    return this.iframeProvider.send({
+      method: "connext_getTransactionHistory",
+    });
   }
 
   private async init() {

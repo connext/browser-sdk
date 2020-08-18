@@ -1,50 +1,71 @@
 import React from "react";
 import * as connext from "@connext/client";
-import { IConnextClient } from "@connext/types";
-import { constants, utils } from "ethers";
+import { IConnextClient, JsonRpcRequest } from "@connext/types";
+import { utils } from "ethers";
 
 class App extends React.Component {
   private channel: IConnextClient | undefined;
 
-  async handleMessage(message: any) {
+  async handleRequest(request: JsonRpcRequest) {
     const channel = this.channel as IConnextClient;
-    switch (message.action) {
-      case 'publicIdentifier':
+    switch (request.method) {
+      case "connext_publicIdentifier":
         return channel.signerAddress;
-      case 'deposit':
+      case "connext_deposit":
         return await channel.deposit({
-          amount: utils.parseEther(message.amount).toString(), // in wei/wad
-          assetId: constants.AddressZero, // constants.AddressZero represents ETH
+          amount: utils.parseEther(request.params.amount).toString(), // in wei/wad
+          assetId: request.params.assetId, // constants.AddressZero represents ETH
         });
-      case 'withdraw':        
+      case "connext_withdraw":
         await channel.withdraw({
-          recipient: message.recipient,
-          amount: utils.parseEther(message.amount).toString(),  // in wei/wad
-          assetId: constants.AddressZero,  // constants.AddressZero represents ETH
-        })
+          recipient: request.params.recipient,
+          amount: utils.parseEther(request.params.amount).toString(), // in wei/wad
+          assetId: request.params.assetId, // constants.AddressZero represents ETH
+        });
         break;
-      case 'balance':
+      case "connext_balance":
         break;
-      case 'transfer':
+      case "connext_transfer":
         break;
-      case 'getTransactionHistory':
+      case "connext_getTransactionHistory":
         break;
     }
-    throw new Error(`Unknown message action ${message.action}`);
+    throw new Error(`Unknown request method ${request.method}`);
   }
 
   async componentDidMount() {
-    const parentOrigin = (new URL(document.referrer)).origin;
+    const parentOrigin = new URL(document.referrer).origin;
     this.channel = await connext.connect("rinkeby");
-    window.addEventListener("message", async (e) => {
-      if (e.origin === parentOrigin) {  // the referrer contains the URL of the page that loaded this iframe
-        const payload = JSON.parse(e.data);
-        const response = await this.handleMessage(payload.message);
+    window.addEventListener(
+      "message",
+      async (e) => {
+        if (e.origin === parentOrigin) {
+          const request = JSON.parse(e.data);
+          try {
+            const result = await this.handleRequest(request);
 
-        // send response back to the parent
-        window.parent.postMessage(JSON.stringify({sequenceNumber: payload.sequenceNumber, message: response}), parentOrigin);
-      }
-    }, true);
+            window.parent.postMessage(
+              JSON.stringify({
+                id: request.id,
+                result,
+              }),
+              parentOrigin
+            );
+          } catch (e) {
+            window.parent.postMessage(
+              JSON.stringify({
+                id: request.id,
+                error: {
+                  message: e.message,
+                },
+              }),
+              parentOrigin
+            );
+          }
+        }
+      },
+      true
+    );
     window.parent.postMessage("INITIALIZED", parentOrigin);
   }
 

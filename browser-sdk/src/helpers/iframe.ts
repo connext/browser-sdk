@@ -1,7 +1,8 @@
 import EventEmitter from "eventemitter3";
 import { renderElement } from "./util";
+import { JsonRpcRequest } from "@connext/types";
 
-class IframeProvider extends EventEmitter {
+export class IframeProvider extends EventEmitter {
   private index = 0;
   private iframe: HTMLIFrameElement | undefined;
 
@@ -16,7 +17,7 @@ class IframeProvider extends EventEmitter {
     );
   }
 
-  public send(message: any): Promise<any> {
+  public send(payload: Partial<JsonRpcRequest>): Promise<any> {
     if (typeof this.iframe === "undefined") {
       throw new Error("iframe is not rendered!");
     }
@@ -24,8 +25,16 @@ class IframeProvider extends EventEmitter {
       throw new Error("iframe inner page not loaded!");
     }
     this.index = this.index + 1; // immediately increment the sequence number to uniquely distinguish this call
-    const payload = { sequenceNumber: this.index, message: message };
-    return new Promise((resolve) => {
+    const request: JsonRpcRequest = {
+      id: this.index,
+      jsonrpc: "2.0",
+      method: payload.method || "",
+      params: payload.params || {},
+    };
+    if (!request.method.trim()) {
+      throw new Error("Missing payload method or invalid");
+    }
+    return new Promise((resolve, reject) => {
       if (typeof this.iframe === "undefined") {
         throw new Error("iframe is not rendered!");
       }
@@ -39,12 +48,19 @@ class IframeProvider extends EventEmitter {
           return;
         }
         const response = JSON.parse(e.data);
-        if (response.sequenceNumber !== payload.sequenceNumber) {
-          // message intended for a different invocation of sendToConnext(), ignore it and let the other handler take it instead
+        if (response.id !== request.id) {
           return;
         }
-        window.removeEventListener("message", receiveMessage); // don't listen anymore, we've successfully received the response
-        resolve(response.message);
+        window.removeEventListener("message", receiveMessage);
+        if (response.result) {
+          resolve(response.result);
+        } else {
+          if (response.error.message) {
+            reject(new Error(response.error.message));
+          } else {
+            reject(new Error(`Failed request for method: ${request.method}`));
+          }
+        }
       };
       window.addEventListener("message", receiveMessage, false);
       (this.iframe.contentWindow as Window).postMessage(
@@ -77,5 +93,3 @@ class IframeProvider extends EventEmitter {
     });
   }
 }
-
-export default IframeProvider;
