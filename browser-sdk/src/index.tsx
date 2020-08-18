@@ -13,11 +13,9 @@ import {
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
-import UserContextProvider from "./contexts/UserContextProvider";
 
 class ConnextSDK {
   public modal: Modal | undefined;
-  public userContext: UserContextProvider | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
   public magic: Magic | undefined;
 
@@ -37,8 +35,10 @@ class ConnextSDK {
     await this.init();
 
     if (this.modal?.state.isLoggedIn) {
+      console.log("Logged in!");
       return true
     }
+    console.log("Modal state", this.modal?.state);
     // TODO: magic link
 
     return true;

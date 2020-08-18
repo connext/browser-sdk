@@ -1,6 +1,4 @@
 import React, { useRef, useContext } from "react";
-import { Magic } from "magic-sdk";
-import { UserContext } from "../contexts/userContext";
 
 
 function LoginModal({magic, isLoggedIn, refreshLogin}) {
