@@ -1,51 +1,95 @@
 import React from "react";
 import * as connext from "@connext/client";
-import { IConnextClient } from "@connext/types";
-import { constants, utils } from "ethers";
+import { IConnextClient, JsonRpcRequest } from "@connext/types";
+import { utils } from "ethers";
 
 class App extends React.Component {
   private channel: IConnextClient | undefined;
 
-  async handleMessage(message: any) {
+  async handleRequest(request: JsonRpcRequest) {
     const channel = this.channel as IConnextClient;
-    switch (message.action) {
-      case 'publicIdentifier':
-        return channel.signerAddress;
-      case 'deposit':
-        return await channel.deposit({
-          amount: utils.parseEther(message.amount).toString(), // in wei/wad
-          assetId: constants.AddressZero, // constants.AddressZero represents ETH
-        });
-      case 'withdraw':        
-        await channel.withdraw({
-          recipient: message.recipient,
-          amount: utils.parseEther(message.amount).toString(),  // in wei/wad
-          assetId: constants.AddressZero,  // constants.AddressZero represents ETH
-        })
+    let result: any | undefined;
+    switch (request.method) {
+      case "connext_publicIdentifier":
+        result = { publicIdentifier: channel.publicIdentifier };
         break;
-      case 'balance':
+      case "connext_deposit":
+        result = {
+          txhash: (
+            await channel.deposit({
+              amount: utils.parseEther(request.params.amount).toString(),
+              assetId: request.params.assetId,
+            })
+          ).transaction.hash,
+        };
         break;
-      case 'transfer':
+      case "connext_withdraw":
+        result = {
+          txhash: (
+            await channel.withdraw({
+              recipient: request.params.recipient,
+              amount: utils.parseEther(request.params.amount).toString(),
+              assetId: request.params.assetId,
+            })
+          ).transaction.hash,
+        };
         break;
-      case 'getTransactionHistory':
+      case "connext_balance":
+        result = {
+          balance: "",
+        };
+        break;
+      case "connext_transfer":
+        result = {
+          paymentId: "",
+        };
+        break;
+      case "connext_getTransactionHistory":
+        result = {
+          transactions: [],
+        };
         break;
     }
-    throw new Error(`Unknown message action ${message.action}`);
+    if (typeof result === "undefined") {
+      throw new Error(`Failed to responde to request method:${request.method}`);
+    }
+    return result;
   }
 
   async componentDidMount() {
-    const parentOrigin = (new URL(document.referrer)).origin;
+    const parentOrigin = new URL(document.referrer).origin;
     this.channel = await connext.connect("rinkeby");
-    window.addEventListener("message", async (e) => {
-      if (e.origin === parentOrigin) {  // the referrer contains the URL of the page that loaded this iframe
-        const payload = JSON.parse(e.data);
-        const response = await this.handleMessage(payload.message);
+    window.addEventListener(
+      "message",
+      async (e) => {
+        if (e.origin === parentOrigin) {
+          const request = JSON.parse(e.data);
+          try {
+            const result = await this.handleRequest(request);
 
-        // send response back to the parent
-        window.parent.postMessage(JSON.stringify({sequenceNumber: payload.sequenceNumber, message: response}), parentOrigin);
-      }
-    }, true);
-    window.parent.postMessage("INITIALIZED", parentOrigin);
+            window.parent.postMessage(
+              JSON.stringify({
+                id: request.id,
+                result,
+              }),
+              parentOrigin
+            );
+          } catch (e) {
+            window.parent.postMessage(
+              JSON.stringify({
+                id: request.id,
+                error: {
+                  message: e.message,
+                },
+              }),
+              parentOrigin
+            );
+          }
+        }
+      },
+      true
+    );
+    window.parent.postMessage("event:iframe-initialized", parentOrigin);
   }
 
   render() {

@@ -30,3 +30,7 @@ iframe-app/node_modules:
 .PHONY: start
 start:
 	make -j 2 iframe-app demo-app
+
+.PHONY: start
+start-basic:
+	make -j 2 iframe-app browser-sdk-demo

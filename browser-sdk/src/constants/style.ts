@@ -1,4 +1,8 @@
-export const STYLE_CONNEXT_OVERLAY = `
+export const CONNEXT_IFRAME_ID = "connext-iframe";
+
+export const CONNEXT_OVERLAY_ID = "connext-overlay";
+
+export const CONNEXT_OVERLAY_STYLE = `
   #connext-overlay {
       position: fixed;
       top: 0; bottom: 0; left: 0; right: 0;

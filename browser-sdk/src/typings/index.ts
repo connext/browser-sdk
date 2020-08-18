@@ -12,3 +12,8 @@ export interface ConnextTransaction {
   amount: string;
   timestamp: Date;
 }
+
+export interface IframeOptions {
+  id: string;
+  src: string;
+}
