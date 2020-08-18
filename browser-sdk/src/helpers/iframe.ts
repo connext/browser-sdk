@@ -1,14 +1,18 @@
 import EventEmitter from "eventemitter3";
-import { renderElement } from "./util";
 import { JsonRpcRequest } from "@connext/types";
+
+import { renderElement } from "./util";
+import { IframeOptions } from "../typings";
 
 export class IframeProvider extends EventEmitter {
   private index = 0;
   private iframe: HTMLIFrameElement | undefined;
 
-  constructor(iframeUrl) {
+  constructor(opts: IframeOptions) {
     super();
-    this.render(iframeUrl);
+    window.addEventListener("DOMContentLoaded", (event) => {
+      this.render(opts);
+    });
   }
 
   get connected() {
@@ -70,9 +74,9 @@ export class IframeProvider extends EventEmitter {
     });
   }
 
-  public render(iframeUrl: string): Promise<void> {
+  public render(opts: IframeOptions): Promise<void> {
     return new Promise((resolve) => {
-      const iframeOrigin = new URL(iframeUrl).origin;
+      const iframeOrigin = new URL(opts.src).origin;
       const receiveInitializedMessage = (e) => {
         if (e.origin === iframeOrigin && e.data === "INITIALIZED") {
           window.removeEventListener("message", receiveInitializedMessage); // don't listen anymore, we've successfully initialized
@@ -84,11 +88,11 @@ export class IframeProvider extends EventEmitter {
       this.iframe = renderElement(
         "iframe",
         {
-          id: "connext-iframe",
-          src: iframeUrl as string,
+          id: opts.id,
+          src: opts.src,
           style: "width:0;height:0;border:0; border:none;",
         },
-        document.body
+        window.document.body
       ) as HTMLIFrameElement;
     });
   }

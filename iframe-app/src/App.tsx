@@ -13,14 +13,14 @@ class App extends React.Component {
         return channel.signerAddress;
       case "connext_deposit":
         return await channel.deposit({
-          amount: utils.parseEther(request.params.amount).toString(), // in wei/wad
-          assetId: request.params.assetId, // constants.AddressZero represents ETH
+          amount: utils.parseEther(request.params.amount).toString(),
+          assetId: request.params.assetId,
         });
       case "connext_withdraw":
         await channel.withdraw({
           recipient: request.params.recipient,
-          amount: utils.parseEther(request.params.amount).toString(), // in wei/wad
-          assetId: request.params.assetId, // constants.AddressZero represents ETH
+          amount: utils.parseEther(request.params.amount).toString(),
+          assetId: request.params.assetId,
         });
         break;
       case "connext_balance":

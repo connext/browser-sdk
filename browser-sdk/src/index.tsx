@@ -4,15 +4,17 @@ import { Magic } from "magic-sdk";
 
 import Modal from "./components/Modal";
 import {
-  STYLE_CONNEXT_OVERLAY,
+  CONNEXT_OVERLAY_STYLE,
   DEFAULT_IFRAME_SRC,
   DEFAULT_MAGIC_KEY,
   DEFAULT_NETWORK,
+  CONNEXT_OVERLAY_ID,
+  CONNEXT_IFRAME_ID,
 } from "./constants";
 import { IframeProvider, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 
-export class ConnextSDK {
+class ConnextSDK {
   public modal: Modal | undefined;
   private magic: Magic | undefined;
   private iframeProvider: IframeProvider | undefined;
@@ -23,9 +25,10 @@ export class ConnextSDK {
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: (opts?.network as any) || DEFAULT_NETWORK,
     });
-    this.iframeProvider = new IframeProvider(
-      opts?.iframeSrc || DEFAULT_IFRAME_SRC
-    );
+    this.iframeProvider = new IframeProvider({
+      src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
+      id: CONNEXT_IFRAME_ID,
+    });
   }
 
   public async login(): Promise<boolean> {
@@ -105,13 +108,17 @@ export class ConnextSDK {
     // })
 
     // style all the elements we're injecting into the page
-    renderElement("style", { innerHTML: STYLE_CONNEXT_OVERLAY }, document.head);
+    renderElement(
+      "style",
+      { innerHTML: CONNEXT_OVERLAY_STYLE },
+      window.document.head
+    );
 
     // create the overlay UI container and render the UI inside it using React
     const overlay = renderElement(
       "div",
-      { id: "connext-overlay" },
-      document.body
+      { id: CONNEXT_OVERLAY_ID },
+      window.document.body
     );
     this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
 
@@ -132,3 +139,5 @@ export class ConnextSDK {
     this.initialized = true;
   }
 }
+
+export default ConnextSDK;
