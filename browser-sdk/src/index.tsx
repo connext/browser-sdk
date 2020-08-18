@@ -29,7 +29,7 @@ export class ConnextSDK {
   }
 
   public async login(): Promise<boolean> {
-    await this.initialize();
+    await this.init();
 
     // TODO: magic link
 
@@ -102,7 +102,7 @@ export class ConnextSDK {
     );
   }
 
-  private async initialize() {
+  private async init() {
     if (this.initialized) {
       return;
     }
@@ -134,7 +134,11 @@ export class ConnextSDK {
       window.addEventListener("message", receiveInitializedMessage, false);
       this.iframeElem = renderElement(
         "iframe",
-        { id: "connext-iframe", src: this.iframeUrl as string },
+        {
+          id: "connext-iframe",
+          src: this.iframeUrl as string,
+          style: "width:0;height:0;border:0; border:none;",
+        },
         document.body
       ) as HTMLIFrameElement;
     });
