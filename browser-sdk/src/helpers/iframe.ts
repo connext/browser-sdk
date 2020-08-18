@@ -79,11 +79,12 @@ export class IframeProvider extends EventEmitter {
   public handleIncomingMessages(e: MessageEvent) {
     const iframeOrigin = new URL(this.opts.src).origin;
     if (e.origin === iframeOrigin) {
-      if (e.data.startsWith("event:")) {
-        const event = e.data.replace("event:", "");
+      const data = e.data as string;
+      if (data.startsWith("event:")) {
+        const event = data.replace("event:", "");
         this.emit(event);
       } else {
-        const payload = JSON.parse(e.data);
+        const payload = JSON.parse(data);
         this.emit(`${payload.id}`, payload);
       }
     }
