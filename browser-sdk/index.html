@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <script type="text/javascript" src="dist/connext.js"></script>
     <script>
-      window.connext = new ConnextSDK();
+      window.sdk = new connext.ConnextSDK();
     </script>
   </head>
   <body>
-    <button onclick="connext.login()">Login</button>
-    <button onclick="connext.deposit()">Deposit</button>
-    <button onclick="connext.withdraw()">Withdraw</button>
-    <button onclick="connext.transfer('0xDEADBEEF', '10.00')">Transfer</button>
+    <button onclick="sdk.login().then(x => console.log('LOGIN', x))">Login</button>
+    <button onclick="sdk.publicIdentifier().then(x => console.log('PUBLIC IDENTIFIER', x))">Public Identifier</button>
+    <button onclick="sdk.deposit().then(x => console.log('DEPOSIT', x))">Deposit</button>
+    <button onclick="sdk.withdraw().then(x => console.log('WITHDRAW', x))">Withdraw</button>
+    <button onclick="sdk.balance().then(x => console.log('BALANCE', x))">Balance</button>
+    <button onclick="sdk.transfer('0xDEADBEEF', '1.23').then(x => console.log('TRANSFER', x))">Transfer</button>
+    <button onclick="sdk.getTransactionHistory().then(x => console.log('GET TRANSACTION HISTORY', x))">Get Transaction History</button>
   </body>
 </html>
