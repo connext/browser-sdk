@@ -8,29 +8,50 @@ class App extends React.Component {
 
   async handleRequest(request: JsonRpcRequest) {
     const channel = this.channel as IConnextClient;
+    let result: any | undefined;
     switch (request.method) {
       case "connext_publicIdentifier":
-        return channel.signerAddress;
+        result = { publicIdentifier: channel.publicIdentifier };
       case "connext_deposit":
-        return await channel.deposit({
-          amount: utils.parseEther(request.params.amount).toString(),
-          assetId: request.params.assetId,
-        });
+        result = {
+          txhash: (
+            await channel.deposit({
+              amount: utils.parseEther(request.params.amount).toString(),
+              assetId: request.params.assetId,
+            })
+          ).transaction.hash,
+        };
       case "connext_withdraw":
-        await channel.withdraw({
-          recipient: request.params.recipient,
-          amount: utils.parseEther(request.params.amount).toString(),
-          assetId: request.params.assetId,
-        });
+        result = {
+          txhash: (
+            await channel.withdraw({
+              recipient: request.params.recipient,
+              amount: utils.parseEther(request.params.amount).toString(),
+              assetId: request.params.assetId,
+            })
+          ).transaction.hash,
+        };
         break;
       case "connext_balance":
+        result = {
+          balance: "",
+        };
         break;
       case "connext_transfer":
+        result = {
+          paymentId: "",
+        };
         break;
       case "connext_getTransactionHistory":
+        result = {
+          transactions: [],
+        };
         break;
     }
-    throw new Error(`Unknown request method ${request.method}`);
+    if (typeof result === "undefined") {
+      throw new Error(`Failed to responde to request method:${request.method}`);
+    }
+    return result;
   }
 
   async componentDidMount() {
