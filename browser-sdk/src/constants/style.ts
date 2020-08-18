@@ -16,7 +16,7 @@ export const STYLE_CONNEXT_OVERLAY = `
     position: absolute;
     bottom: 1em;
     right: 1em;
-    background: white;
+    background: red;
     width: 16em;
     padding: 2em;
     border-radius: 1em;

@@ -1,6 +1,20 @@
 import React from "react";
 import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
+import LoginModal from "./LoginModal";
+import { Magic } from "magic-sdk";
+
+interface IProp {
+  magic: Magic | undefined;
+  isLoggedIn: boolean;
+  setIsLoggedIn: CallableFunction;
+  userIssuer: string | null;
+  setUserIssuer: CallableFunction;
+  userEmail: string | null;
+  setUserEmail: CallableFunction;
+  userPublicAddress: string | null;
+  setUserPublicAddress: CallableFunction;
+}
 
 interface IState {
   mode: string;
@@ -8,7 +22,7 @@ interface IState {
   transferAmount: string;
 }
 
-class Modal extends React.Component<{}, IState> {
+class Modal extends React.Component<IProp, IState> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -22,10 +36,16 @@ class Modal extends React.Component<{}, IState> {
     return (
       <div id="connext-overlay-modal">
         {
-          this.state.mode === "DEPOSIT" ?
+          this.state.mode === "LOGIN" ?
+            <LoginModal 
+              magic={this.props.magic}
+              isLoggedIn={this.props.isLoggedIn}
+              setIsLoggedIn={this.props.setIsLoggedIn}
+            /> :
+            this.state.mode === "DEPOSIT" ?
             <DepositModal /> :
             this.state.mode === "WITHDRAW" ?
-            <WithdrawModal />:
+            <WithdrawModal /> :
             <div>Hello World! {this.state.mode}</div>
         }
       </div>

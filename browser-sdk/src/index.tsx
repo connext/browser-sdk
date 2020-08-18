@@ -15,13 +15,23 @@ import { SDKError } from "./helpers/error";
 
 export class ConnextSDK {
   public modal: Modal | undefined;
-  private magic: Magic | undefined;
+
   private iframeUrl: string | undefined;
   private iframeElem: HTMLIFrameElement | undefined;
+
+  public magic: Magic | undefined;
+  private isLoggedIn: boolean;
+  private userIssuer: string | null;
+  private userEmail: string | null;
+  private userPublicAddress: string | null;
 
   private initialized = false;
 
   constructor(opts?: ConnextSDKOptions) {
+    this.isLoggedIn = false;
+    this.userIssuer = null;
+    this.userEmail = null;
+    this.userPublicAddress = null;
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: (opts?.network as any) || DEFAULT_NETWORK,
     });
@@ -29,7 +39,7 @@ export class ConnextSDK {
   }
 
   public async login(): Promise<boolean> {
-    await this.initialize();
+    await this.init();
 
     // TODO: magic link
 
@@ -37,7 +47,7 @@ export class ConnextSDK {
   }
 
   public async publicIdentifier(): Promise<string | null> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
@@ -49,27 +59,27 @@ export class ConnextSDK {
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    (this.modal as Modal).showDepositUI();
+    this.modal.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    (this.modal as Modal).showWithdrawUI();
+    this.modal.showWithdrawUI();
     return false;
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
@@ -81,17 +91,17 @@ export class ConnextSDK {
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    (this.modal as Modal).showTransferUI(recipient, amount);
+    this.modal.showTransferUI(recipient, amount);
     return false;
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
@@ -102,7 +112,7 @@ export class ConnextSDK {
     );
   }
 
-  private async initialize() {
+  private async init() {
     if (this.initialized) {
       return;
     }
@@ -120,7 +130,28 @@ export class ConnextSDK {
       { id: "connext-overlay" },
       document.body
     );
-    this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
+    this.modal = (ReactDOM.render(
+      <Modal
+        magic={this.magic}
+        isLoggedIn={this.isLoggedIn}
+        setIsLoggedIn={(e) => {
+          this.isLoggedIn = e;
+        }}
+        userIssuer={this.userIssuer}
+        setUserIssuer={(e) => {
+          this.userIssuer = e;
+        }}
+        userEmail={this.userEmail}
+        setUserEmail={(e) => {
+          this.userEmail = e;
+        }}
+        userPublicAddress={this.userPublicAddress}
+        setUserPublicAddress={(e) => {
+          this.userPublicAddress = e;
+        }}
+      />,
+      overlay
+    ) as unknown) as Modal;
 
     // create an invisible iframe that contains the Connext Browser SDK service
     await new Promise((resolve) => {
@@ -134,7 +165,11 @@ export class ConnextSDK {
       window.addEventListener("message", receiveInitializedMessage, false);
       this.iframeElem = renderElement(
         "iframe",
-        { id: "connext-iframe", src: this.iframeUrl as string },
+        {
+          id: "connext-iframe",
+          src: this.iframeUrl as string,
+          style: "width:0;height:0;border:0; border:none;",
+        },
         document.body
       ) as HTMLIFrameElement;
     });
