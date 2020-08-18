@@ -1,4 +1,6 @@
 import React from "react";
+import DepositModal from "./DepositModal";
+import WithdrawModal from "./WithdrawModal";
 
 interface IState {
   mode: string;
@@ -18,17 +20,14 @@ class Modal extends React.Component<{}, IState> {
 
   render() {
     return (
-      <div
-        style={{
-          pointerEvents: "auto",
-          position: "absolute",
-          bottom: "0",
-          right: "0",
-          maxWidth: "20em",
-          background: "red",
-        }}
-      >
-        Hello World! {this.state.mode}
+      <div id="connext-overlay-modal">
+        {
+          this.state.mode === "DEPOSIT" ?
+            <DepositModal /> :
+            this.state.mode === "WITHDRAW" ?
+            <WithdrawModal />:
+            <div>Hello World! {this.state.mode}</div>
+        }
       </div>
     );
   }
