@@ -1,17 +1,18 @@
 import EventEmitter from "eventemitter3";
 import { JsonRpcRequest } from "@connext/types";
 
-import { renderElement } from "./util";
+import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
 
 export class IframeProvider extends EventEmitter {
-  private index = 0;
-  private iframe: HTMLIFrameElement | undefined;
+  public iframe: HTMLIFrameElement | undefined;
+  public opts: IframeOptions;
 
   constructor(opts: IframeOptions) {
     super();
-    window.addEventListener("DOMContentLoaded", (event) => {
-      this.render(opts);
+    this.opts = opts;
+    window.addEventListener("DOMContentLoaded", () => {
+      this.render();
     });
   }
 
@@ -22,40 +23,23 @@ export class IframeProvider extends EventEmitter {
   }
 
   public send(payload: Partial<JsonRpcRequest>): Promise<any> {
-    if (typeof this.iframe === "undefined") {
-      throw new Error("iframe is not rendered!");
-    }
-    if (!this.connected) {
-      throw new Error("iframe inner page not loaded!");
-    }
-    this.index = this.index + 1; // immediately increment the sequence number to uniquely distinguish this call
-    const request: JsonRpcRequest = {
-      id: this.index,
-      jsonrpc: "2.0",
-      method: payload.method || "",
-      params: payload.params || {},
-    };
-    if (!request.method.trim()) {
-      throw new Error("Missing payload method or invalid");
-    }
     return new Promise((resolve, reject) => {
       if (typeof this.iframe === "undefined") {
         throw new Error("iframe is not rendered!");
       }
-      const receiveMessage = (e) => {
-        if (typeof this.iframe === "undefined") {
-          throw new Error("iframe is not rendered!");
-        }
-        const iframeOrigin = new URL(this.iframe.src).origin;
-        if (e.origin != iframeOrigin) {
-          // just a message from some other origin, ignore it
-          return;
-        }
-        const response = JSON.parse(e.data);
-        if (response.id !== request.id) {
-          return;
-        }
-        window.removeEventListener("message", receiveMessage);
+      if (this.iframe.contentWindow === null) {
+        throw new Error("iframe inner page not loaded!");
+      }
+      const request: JsonRpcRequest = {
+        id: payloadId(),
+        jsonrpc: "2.0",
+        method: payload.method || "",
+        params: payload.params || {},
+      };
+      if (!request.method.trim()) {
+        throw new Error("Missing payload method or invalid");
+      }
+      this.on(`${request.id}`, (response) => {
         if (response.result) {
           resolve(response.result);
         } else {
@@ -65,35 +49,53 @@ export class IframeProvider extends EventEmitter {
             reject(new Error(`Failed request for method: ${request.method}`));
           }
         }
-      };
-      window.addEventListener("message", receiveMessage, false);
-      (this.iframe.contentWindow as Window).postMessage(
+      });
+      this.iframe.contentWindow.postMessage(
         JSON.stringify(payload),
         this.iframe.src
       );
     });
   }
 
-  public render(opts: IframeOptions): Promise<void> {
+  public render(): Promise<void> {
+    this.subscribe();
     return new Promise((resolve) => {
-      const iframeOrigin = new URL(opts.src).origin;
-      const receiveInitializedMessage = (e) => {
-        if (e.origin === iframeOrigin && e.data === "INITIALIZED") {
-          window.removeEventListener("message", receiveInitializedMessage); // don't listen anymore, we've successfully initialized
-          this.emit("connected");
-          resolve();
-        }
-      };
-      window.addEventListener("message", receiveInitializedMessage, false);
+      this.on("iframe-initialized", () => {
+        this.emit("connected");
+        resolve();
+      });
       this.iframe = renderElement(
         "iframe",
         {
-          id: opts.id,
-          src: opts.src,
+          id: this.opts.id,
+          src: this.opts.src,
           style: "width:0;height:0;border:0; border:none;",
         },
         window.document.body
       ) as HTMLIFrameElement;
     });
+  }
+
+  public handleIncomingMessages(e: MessageEvent) {
+    const iframeOrigin = new URL(this.opts.src).origin;
+    if (e.origin === iframeOrigin) {
+      if (e.data.startsWith("event:")) {
+        const event = e.data.replace("event:");
+        this.emit(event);
+      } else {
+        const payload = JSON.parse(e.data);
+        this.emit(`${payload.id}`, payload);
+      }
+    }
+  }
+
+  public subscribe() {
+    window.addEventListener("message", (e) => this.handleIncomingMessages(e));
+  }
+
+  public unsubscribe() {
+    window.removeEventListener("message", (e) =>
+      this.handleIncomingMessages(e)
+    );
   }
 }

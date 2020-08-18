@@ -12,6 +12,7 @@ class App extends React.Component {
     switch (request.method) {
       case "connext_publicIdentifier":
         result = { publicIdentifier: channel.publicIdentifier };
+        break;
       case "connext_deposit":
         result = {
           txhash: (
@@ -21,6 +22,7 @@ class App extends React.Component {
             })
           ).transaction.hash,
         };
+        break;
       case "connext_withdraw":
         result = {
           txhash: (
@@ -87,7 +89,7 @@ class App extends React.Component {
       },
       true
     );
-    window.parent.postMessage("INITIALIZED", parentOrigin);
+    window.parent.postMessage("event:iframe-initialized", parentOrigin);
   }
 
   render() {
