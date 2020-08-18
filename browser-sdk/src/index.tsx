@@ -48,22 +48,22 @@ export class ConnextSDK {
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    (this.modal as Modal).showDepositUI();
+    this.modal.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    (this.modal as Modal).showWithdrawUI();
+    this.modal.showWithdrawUI();
     return false;
   }
 
@@ -77,12 +77,12 @@ export class ConnextSDK {
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    (this.modal as Modal).showTransferUI(recipient, amount);
+    this.modal.showTransferUI(recipient, amount);
     return false;
   }
 
