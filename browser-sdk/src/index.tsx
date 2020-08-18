@@ -13,25 +13,17 @@ import {
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
+import UserContextProvider from "./contexts/UserContextProvider";
 
 class ConnextSDK {
   public modal: Modal | undefined;
+  public userContext: UserContextProvider | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
-
-
   public magic: Magic | undefined;
-  private isLoggedIn: boolean;
-  private userIssuer: string | null;
-  private userEmail: string | null;
-  private userPublicAddress: string | null;
 
   private initialized = false;
 
   constructor(opts?: ConnextSDKOptions) {
-    this.isLoggedIn = false;
-    this.userIssuer = null;
-    this.userEmail = null;
-    this.userPublicAddress = null;
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: (opts?.network as any) || DEFAULT_NETWORK,
     });
@@ -44,6 +36,9 @@ class ConnextSDK {
   public async login(): Promise<boolean> {
     await this.init();
 
+    if (this.modal?.state.isLoggedIn) {
+      return true
+    }
     // TODO: magic link
 
     return true;
@@ -136,25 +131,7 @@ class ConnextSDK {
       window.document.body
     );
     this.modal = (ReactDOM.render(
-      <Modal
-        magic={this.magic}
-        isLoggedIn={this.isLoggedIn}
-        setIsLoggedIn={(e) => {
-          this.isLoggedIn = e;
-        }}
-        userIssuer={this.userIssuer}
-        setUserIssuer={(e) => {
-          this.userIssuer = e;
-        }}
-        userEmail={this.userEmail}
-        setUserEmail={(e) => {
-          this.userEmail = e;
-        }}
-        userPublicAddress={this.userPublicAddress}
-        setUserPublicAddress={(e) => {
-          this.userPublicAddress = e;
-        }}
-      />,
+      <Modal magic={this.magic}/>,
       overlay
     ) as unknown) as Modal;
 

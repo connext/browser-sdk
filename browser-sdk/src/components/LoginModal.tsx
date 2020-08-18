@@ -1,20 +1,25 @@
-import React, { useState } from "react";
+import React, { useRef, useContext } from "react";
 import { Magic } from "magic-sdk";
+import { UserContext } from "../contexts/userContext";
 
 
-function LoginModal({magic, isLoggedIn, setIsLoggedIn}) {
-  const [email, setEmail] = useState<string | undefined>(undefined);
+function LoginModal({magic, isLoggedIn, refreshLogin}) {
+  const emailRef = useRef<HTMLInputElement>(null);
 
   async function loginUser(e) {
     e.preventDefault();
-    if (!e.target.checkValidity()) {
+    if (!e.target.checkValidity() || !emailRef || !emailRef.current) {
       console.log("Invalid email!");
       return
     }
-    const idToken = await magic.auth.loginWithMagicLink({ email });
-    console.log(idToken);
-    setIsLoggedIn(true);
-    console.log(isLoggedIn);
+    const email = emailRef.current.value;
+    await magic.auth.loginWithMagicLink({ email });
+    await refreshLogin();
+  }
+
+  async function logoutUser() {
+    await magic.user.logout();
+    await refreshLogin();
   }
 
   return (
@@ -22,6 +27,7 @@ function LoginModal({magic, isLoggedIn, setIsLoggedIn}) {
       {isLoggedIn ?
         <>
           <h1>Login Successful!</h1>
+          <button onClick={logoutUser}>Logout</button>
         </>:
         <>
           <form onSubmit={loginUser}>
@@ -30,8 +36,7 @@ function LoginModal({magic, isLoggedIn, setIsLoggedIn}) {
               required
               type="email"
               placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              ref={emailRef}
             />
             <button type="submit">Send me a login link!</button>
           </form>
