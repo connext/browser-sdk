@@ -11,13 +11,13 @@ import {
   CONNEXT_OVERLAY_ID,
   CONNEXT_IFRAME_ID,
 } from "./constants";
-import { IframeProvider, renderElement, SDKError } from "./helpers";
+import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 
 class ConnextSDK {
   public modal: Modal | undefined;
   private magic: Magic | undefined;
-  private iframeProvider: IframeProvider | undefined;
+  private iframeRpc: IframeRpcConnection | undefined;
 
   private initialized = false;
 
@@ -25,7 +25,7 @@ class ConnextSDK {
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: (opts?.network as any) || DEFAULT_NETWORK,
     });
-    this.iframeProvider = new IframeProvider({
+    this.iframeRpc = new IframeRpcConnection({
       src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
@@ -40,12 +40,15 @@ class ConnextSDK {
   }
 
   public async publicIdentifier(): Promise<string | null> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.iframeRpc === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return this.iframeProvider.send({ method: "connext_publicIdentifier" });
+    const result = await this.iframeRpc.send({
+      method: "connext_publicIdentifier",
+    });
+    return result;
   }
 
   public async deposit(): Promise<boolean> {
@@ -69,12 +72,13 @@ class ConnextSDK {
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.iframeRpc === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    return this.iframeProvider.send({ method: "connext_balance" });
+    const result = await this.iframeRpc.send({ method: "connext_balance" });
+    return result;
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
@@ -88,14 +92,15 @@ class ConnextSDK {
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized || typeof this.iframeProvider === "undefined") {
+    if (!this.initialized || typeof this.iframeRpc === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    return this.iframeProvider.send({
+    const result = await this.iframeRpc.send({
       method: "connext_getTransactionHistory",
     });
+    return result;
   }
 
   private async init() {
@@ -123,13 +128,13 @@ class ConnextSDK {
     this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
 
     await new Promise((resolve) => {
-      if (typeof this.iframeProvider === "undefined") {
+      if (typeof this.iframeRpc === "undefined") {
         throw new Error("Iframe Provider is undefined");
       }
-      if (this.iframeProvider.connected) {
+      if (this.iframeRpc.connected) {
         resolve();
       } else {
-        this.iframeProvider.once("connected", () => {
+        this.iframeRpc.once("connect", () => {
           resolve();
         });
       }

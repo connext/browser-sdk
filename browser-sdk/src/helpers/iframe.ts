@@ -1,10 +1,11 @@
 import EventEmitter from "eventemitter3";
-import { JsonRpcRequest } from "@connext/types";
+import { JsonRpcRequest, IRpcConnection } from "@connext/types";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
 
-export class IframeProvider extends EventEmitter {
+export class IframeRpcConnection extends EventEmitter<string>
+  implements IRpcConnection {
   public iframe: HTMLIFrameElement | undefined;
   public opts: IframeOptions;
 
@@ -58,10 +59,10 @@ export class IframeProvider extends EventEmitter {
   }
 
   public render(): Promise<void> {
-    this.subscribe();
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
-        this.emit("connected");
+        this.emit("connect");
+        this.emit("open");
         resolve();
       });
       this.iframe = renderElement(
@@ -90,6 +91,17 @@ export class IframeProvider extends EventEmitter {
         this.emit(`${payload.id}`, payload);
       }
     }
+  }
+
+  public async open() {
+    this.subscribe();
+    await this.render();
+  }
+
+  public async close() {
+    this.unsubscribe();
+    this.emit("disconnect");
+    this.emit("close");
   }
 
   public subscribe() {
