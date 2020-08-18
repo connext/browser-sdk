@@ -9,15 +9,15 @@ import {
   DEFAULT_MAGIC_KEY,
   DEFAULT_NETWORK,
 } from "./constants";
-import { renderElement, sendToConnext } from "./helpers/util";
+import { renderElement } from "./helpers/util";
 import { ConnextSDKOptions, ConnextTransaction } from "./helpers/types";
 import { SDKError } from "./helpers/error";
+import IframeProvider from "./helpers/iframe";
 
 export class ConnextSDK {
   public modal: Modal | undefined;
   private magic: Magic | undefined;
-  private iframeUrl: string | undefined;
-  private iframeElem: HTMLIFrameElement | undefined;
+  private iframeProvider: IframeProvider | undefined;
 
   private initialized = false;
 
@@ -25,7 +25,9 @@ export class ConnextSDK {
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: (opts?.network as any) || DEFAULT_NETWORK,
     });
-    this.iframeUrl = opts?.iframeSrc || DEFAULT_IFRAME_SRC;
+    this.iframeProvider = new IframeProvider(
+      opts?.iframeSrc || DEFAULT_IFRAME_SRC
+    );
   }
 
   public async login(): Promise<boolean> {
@@ -37,19 +39,16 @@ export class ConnextSDK {
   }
 
   public async publicIdentifier(): Promise<string | null> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return await sendToConnext(
-      { action: "publicIdentifier" },
-      this.iframeElem as HTMLIFrameElement
-    );
+    return this.iframeProvider.send({ action: "publicIdentifier" });
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
@@ -59,7 +58,7 @@ export class ConnextSDK {
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
@@ -69,19 +68,16 @@ export class ConnextSDK {
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    return await sendToConnext(
-      { action: "balance" },
-      this.iframeElem as HTMLIFrameElement
-    );
+    return this.iframeProvider.send({ action: "balance" });
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
@@ -91,15 +87,12 @@ export class ConnextSDK {
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized) {
+    if (!this.initialized || typeof this.iframeProvider === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    return await sendToConnext(
-      { action: "getTransactionHistory" },
-      this.iframeElem as HTMLIFrameElement
-    );
+    return this.iframeProvider.send({ action: "getTransactionHistory" });
   }
 
   private async init() {
@@ -122,25 +115,17 @@ export class ConnextSDK {
     );
     this.modal = (ReactDOM.render(<Modal />, overlay) as unknown) as Modal;
 
-    // create an invisible iframe that contains the Connext Browser SDK service
     await new Promise((resolve) => {
-      const iframeOrigin = new URL(this.iframeUrl as string).origin;
-      const receiveInitializedMessage = (e) => {
-        if (e.origin === iframeOrigin && e.data === "INITIALIZED") {
-          window.removeEventListener("message", receiveInitializedMessage); // don't listen anymore, we've successfully initialized
+      if (typeof this.iframeProvider === "undefined") {
+        throw new Error("Iframe Provider is undefined");
+      }
+      if (this.iframeProvider.connected) {
+        resolve();
+      } else {
+        this.iframeProvider.once("connected", () => {
           resolve();
-        }
-      };
-      window.addEventListener("message", receiveInitializedMessage, false);
-      this.iframeElem = renderElement(
-        "iframe",
-        {
-          id: "connext-iframe",
-          src: this.iframeUrl as string,
-          style: "width:0;height:0;border:0; border:none;",
-        },
-        document.body
-      ) as HTMLIFrameElement;
+        });
+      }
     });
 
     // mark this SDK as fully initialized
