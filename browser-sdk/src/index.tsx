@@ -112,9 +112,14 @@ class ConnextSDK {
         }
       })
     })
-    console.log({amount, recipient})
-    const result = await this.iframeRpc?.send({method: "connext_withdraw", params: {recipient, amount, assetId: ""}});
-    console.log(result);
+    console.log({amount, recipient});
+    try {
+      const result = await this.iframeRpc?.send({method: "connext_withdraw", params: {recipient, amount, assetId: ""}});
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
     return false;
   }
 
