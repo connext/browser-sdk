@@ -21,7 +21,7 @@ function WithdrawModal() {
         </>
       }
     </div>
-  )
+  );
 }
 
 export default WithdrawModal;

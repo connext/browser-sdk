@@ -5,9 +5,9 @@ import { LoginEvent } from "./../typings";
 function LoginModal({ isLoggedIn, loginTarget }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
-  async function loginUser(e) {
+  async function loginUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!e.target.checkValidity() || !emailRef || !emailRef.current) {
+    if (!e.currentTarget.checkValidity() || !emailRef || !emailRef.current) {
       console.log("Invalid email!");
       return;
     }
