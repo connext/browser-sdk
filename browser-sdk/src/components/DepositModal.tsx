@@ -12,6 +12,7 @@ function DepositModal() {
           <input
             type="text"
             value={depositAddress}
+            readOnly
           />
         </>
         :
