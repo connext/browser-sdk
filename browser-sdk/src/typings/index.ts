@@ -17,9 +17,3 @@ export interface IframeOptions {
   id: string;
   src: string;
 }
-
-export class LoginEvent extends CustomEvent<any> {
-  constructor(email) {
-    super("login", {detail: email});
-  }
-}

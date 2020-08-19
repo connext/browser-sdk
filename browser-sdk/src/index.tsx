@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { Magic, MagicUserMetadata, RPCError, RPCErrorCode } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
@@ -14,7 +14,7 @@ import {
   CONNEXT_IFRAME_ID,
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
-import { ConnextSDKOptions, ConnextTransaction, LoginEvent } from "./typings";
+import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 import { IConnextClient } from "@connext/types";
 
 class ConnextSDK {
@@ -76,7 +76,7 @@ class ConnextSDK {
     // Listen for user to enter email
     const email: string = await new Promise((resolve, reject) => {
       this.loginTarget.addEventListener("login", {
-        handleEvent: (event: LoginEvent) => {
+        handleEvent: (event: CustomEvent) => {
           resolve(event.detail);
         }
       })
@@ -130,6 +130,7 @@ class ConnextSDK {
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
+    console.warn(this.channel?.getFreeBalance());
     const result = await this.iframeRpc.send({ method: "connext_balance" });
     return result;
   }
@@ -200,9 +201,9 @@ class ConnextSDK {
       throw new Error("Iframe Provider is undefined");
     }
 
-    this.channel = await connext.connect({
-      channelProvider: new ChannelProvider(this.iframeRpc),
-    });
+    // this.channel = await connext.connect({
+    //   channelProvider: new ChannelProvider(this.iframeRpc),
+    // });
 
     // mark this SDK as fully initialized
     this.initialized = true;

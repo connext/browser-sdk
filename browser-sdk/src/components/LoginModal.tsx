@@ -1,6 +1,4 @@
 import React, { useRef } from "react";
-import { LoginEvent } from "./../typings";
-
 
 function LoginModal({ isLoggedIn, loginTarget }) {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -12,7 +10,7 @@ function LoginModal({ isLoggedIn, loginTarget }) {
       return;
     }
     const email = emailRef.current.value;
-    loginTarget.dispatchEvent(new LoginEvent(email));
+    loginTarget.dispatchEvent(new CustomEvent("login", {detail: email}));
   }
 
   return (
