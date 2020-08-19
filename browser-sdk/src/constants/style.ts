@@ -20,7 +20,7 @@ export const CONNEXT_OVERLAY_STYLE = `
     position: absolute;
     bottom: 1em;
     right: 1em;
-    background: red;
+    background: white;
     width: 16em;
     padding: 2em;
     border-radius: 1em;
