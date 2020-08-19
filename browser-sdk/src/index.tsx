@@ -1,6 +1,8 @@
 import React, { useReducer } from "react";
 import ReactDOM from "react-dom";
 import { Magic, MagicUserMetadata, RPCError, RPCErrorCode } from "magic-sdk";
+import { ChannelProvider } from "@connext/channel-provider";
+import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
@@ -13,6 +15,7 @@ import {
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction, LoginEvent } from "./typings";
+import { IConnextClient } from "@connext/types";
 
 class ConnextSDK {
   public modal: Modal | undefined;
@@ -20,6 +23,8 @@ class ConnextSDK {
   public magic: Magic | undefined;
   private magicUserMetaData: MagicUserMetadata | undefined;
   private loginTarget: EventTarget;
+  private channel: IConnextClient | undefined;
+
   private initialized = false;
 
   constructor(opts?: ConnextSDKOptions) {
@@ -31,6 +36,15 @@ class ConnextSDK {
       id: CONNEXT_IFRAME_ID,
     });
     this.loginTarget = new EventTarget();
+  }
+
+  get publicIdentifier(): string {
+    if (!this.initialized || typeof this.channel === "undefined") {
+      throw new SDKError(
+        "Not initialized - make sure to await login() first before calling publicIdentifier()!"
+      );
+    }
+    return this.channel.publicIdentifier;
   }
 
   public async login(): Promise<boolean> {
@@ -88,18 +102,6 @@ class ConnextSDK {
       }
       return false;
     }
-  }
-
-  public async publicIdentifier(): Promise<string | null> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
-      throw new SDKError(
-        "Not initialized - make sure to await login() first before calling publicIdentifier()!"
-      );
-    }
-    const result = await this.iframeRpc.send({
-      method: "connext_publicIdentifier",
-    });
-    return result;
   }
 
   public async deposit(): Promise<boolean> {
@@ -192,6 +194,14 @@ class ConnextSDK {
           resolve();
         });
       }
+    });
+
+    if (typeof this.iframeRpc === "undefined") {
+      throw new Error("Iframe Provider is undefined");
+    }
+
+    this.channel = await connext.connect({
+      channelProvider: new ChannelProvider(this.iframeRpc),
     });
 
     // mark this SDK as fully initialized

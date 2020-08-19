@@ -1,6 +1,6 @@
 import React from "react";
 import * as connext from "@connext/client";
-import { IConnextClient, JsonRpcRequest } from "@connext/types";
+import { IConnextClient, JsonRpcRequest, ChannelMethods } from "@connext/types";
 import { utils } from "ethers";
 
 class App extends React.Component {
@@ -50,6 +50,12 @@ class App extends React.Component {
           transactions: [],
         };
         break;
+    }
+    if (request.method.startsWith("chan_")) {
+      result = await channel.channelProvider.send(
+        request.method as ChannelMethods,
+        request.params
+      );
     }
     if (typeof result === "undefined") {
       throw new Error(`Failed to responde to request method:${request.method}`);
