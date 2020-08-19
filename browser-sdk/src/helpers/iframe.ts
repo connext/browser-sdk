@@ -13,7 +13,7 @@ export class IframeRpcConnection extends EventEmitter<string>
     super();
     this.opts = opts;
     window.addEventListener("DOMContentLoaded", () => {
-      this.render();
+      this.open();
     });
   }
 

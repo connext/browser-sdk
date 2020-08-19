@@ -11,12 +11,15 @@ class App extends React.Component {
     const mnemonic = utils.entropyToMnemonic(utils.keccak256(signature));
     const signer = Wallet.fromMnemonic(mnemonic).privateKey;
     this.channel = await connext.connect(network, { signer });
+    return this.channel.publicIdentifier;
   }
 
   async handleRequest(request: JsonRpcRequest) {
     if (request.method === "connext_authenticate") {
-      await this.authenticate(request.params.signature);
-      return true;
+      const publicIdentifier = await this.authenticate(
+        request.params.signature
+      );
+      return { publicIdentifier };
     }
 
     if (typeof this.channel === "undefined") {

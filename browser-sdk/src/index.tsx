@@ -43,16 +43,13 @@ class ConnextSDK extends EventEmitter<string> {
     });
   }
 
-  public async publicIdentifier(): Promise<string> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+  get publicIdentifier(): string {
+    if (typeof this.userPublicIdentifier === "undefined") {
       throw new SDKError(
-        "Not initialized - make sure to await login() first before calling publicIdentifier()!"
+        "Not initialized - make sure to await login() first before getting publicIdentifier!"
       );
     }
-    const result = await this.iframeRpc.send({
-      method: "connext_publicIdentifier",
-    });
-    return result;
+    return this.userPublicIdentifier;
   }
 
   public async login(): Promise<boolean> {
@@ -61,6 +58,7 @@ class ConnextSDK extends EventEmitter<string> {
     const isLoggedIn = await this.isMagicLoggedIn();
 
     if (!isLoggedIn) {
+      this.modal?.showLoginUI();
       await this.loginWithMagic();
     }
 
@@ -139,46 +137,18 @@ class ConnextSDK extends EventEmitter<string> {
     return result;
   }
 
+  // ---------- Private ----------------------------------------------- //
+
   private async init() {
     if (this.modal) {
       return;
     }
+    await this.renderModal();
+    await this.waitForIframe();
 
-    // style all the elements we're injecting into the page
-    renderElement(
-      "style",
-      { innerHTML: CONNEXT_OVERLAY_STYLE },
-      window.document.head
-    );
-
-    // create the overlay UI container and render the UI inside it using React
-    const overlay = renderElement(
-      "div",
-      { id: CONNEXT_OVERLAY_ID },
-      window.document.body
-    );
-    this.modal = (ReactDOM.render(
-      <Modal emit={this.emit.bind(this)} />,
-      overlay
-    ) as unknown) as Modal;
-
-    await new Promise((resolve) => {
-      if (typeof this.iframeRpc === "undefined") {
-        throw new Error("Iframe Provider is undefined");
-      }
-      if (this.iframeRpc.connected) {
-        resolve(); // TODO: doesn't wait for component to be fully mounted
-      } else {
-        this.iframeRpc.once("connect", () => {
-          resolve();
-        });
-      }
-    });
-    this.iframeRpc?.subscribe();
-
-    if (typeof this.iframeRpc === "undefined") {
-      throw new Error("Iframe Provider is undefined");
-    }
+    // if (typeof this.iframeRpc === "undefined") {
+    //   throw new SDKError("Iframe Provider is undefined");
+    // }
 
     // this.channel = await connext.connect({
     //   channelProvider: new ChannelProvider(this.iframeRpc),
@@ -190,10 +160,10 @@ class ConnextSDK extends EventEmitter<string> {
 
   private async isMagicLoggedIn() {
     if (typeof this.magic === "undefined") {
-      throw new Error("Magic SDK has not been initialized");
+      throw new SDKError("Magic SDK has not been initialized");
     }
     if (typeof this.modal === "undefined") {
-      throw new Error("Modal has not been initialized");
+      throw new SDKError("Modal has not been initialized");
     }
     try {
       // Check if user is already logged in
@@ -221,17 +191,19 @@ class ConnextSDK extends EventEmitter<string> {
 
   private async loginWithMagic() {
     if (typeof this.magic === "undefined") {
-      throw new Error("Magic SDK has not been initialized");
+      throw new SDKError("Magic SDK has not been initialized");
     }
     if (typeof this.modal === "undefined") {
-      throw new Error("Modal has not been initialized");
+      throw new SDKError("Modal has not been initialized");
     }
     // Listen for user to enter email
     const email: string = await new Promise((resolve, reject) => {
       const timeout = setTimeout(
         () => {
           reject(
-            new Error("Login with Magic timeout - expected email after 10 mins")
+            new SDKError(
+              "Login with Magic timeout - expected email after 10 mins"
+            )
           );
         },
         600_000 // 10 mins
@@ -263,7 +235,7 @@ class ConnextSDK extends EventEmitter<string> {
 
   private async signAuthenticationMessage() {
     if (typeof this.magic === "undefined") {
-      throw new Error("Magic SDK has not been initialized");
+      throw new SDKError("Magic SDK has not been initialized");
     }
     const accounts = await this.magic.rpcProvider.send("eth_accounts");
     const result = await this.magic.rpcProvider.send("personal_sign", [
@@ -279,10 +251,42 @@ class ConnextSDK extends EventEmitter<string> {
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    await this.iframeRpc.send({
+    const result = await this.iframeRpc.send({
       method: "connext_authenticate",
       params: { signature, network: this.network },
     });
+    this.userPublicIdentifier = result.publicIdentifier;
+  }
+
+  private async waitForIframe() {
+    await new Promise((resolve) => {
+      if (typeof this.iframeRpc === "undefined") {
+        throw new SDKError("Iframe Provider is undefined");
+      }
+      if (this.iframeRpc.connected) {
+        resolve();
+      } else {
+        this.iframeRpc.once("connect", () => {
+          resolve();
+        });
+      }
+    });
+  }
+
+  private async renderModal() {
+    // style all the elements we're injecting into the page
+    renderElement(
+      "style",
+      { innerHTML: CONNEXT_OVERLAY_STYLE },
+      window.document.head
+    );
+
+    // create the overlay UI container and render the UI inside it using React
+
+    this.modal = (ReactDOM.render(
+      <Modal emit={this.emit.bind(this)} />,
+      renderElement("div", { id: CONNEXT_OVERLAY_ID }, window.document.body)
+    ) as unknown) as Modal;
   }
 }
 

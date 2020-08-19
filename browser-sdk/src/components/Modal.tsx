@@ -19,7 +19,7 @@ class Modal extends React.Component<IProp, IState> {
   constructor(props: any) {
     super(props);
     this.state = {
-      mode: "LOGIN",
+      mode: "",
       isLoggedIn: false,
       publicAddress: "",
       transferRecipient: null,
@@ -27,23 +27,30 @@ class Modal extends React.Component<IProp, IState> {
     };
   }
 
-  render() {
-    return (
-      <div id="connext-overlay-modal">
-        {this.state.mode === "LOGIN" ? (
+  renderView() {
+    switch (this.state.mode) {
+      case "LOGIN":
+        return (
           <LoginModal
             isLoggedIn={this.state.isLoggedIn}
             emit={this.props.emit}
           />
-        ) : this.state.mode === "DEPOSIT" ? (
-          <DepositModal />
-        ) : this.state.mode === "WITHDRAW" ? (
-          <WithdrawModal emit={this.props.emit} />
-        ) : (
-          <div>Hello World! {this.state.mode}</div>
-        )}
-      </div>
-    );
+        );
+      case "DEPOSIT":
+        return <DepositModal />;
+      case "WITHDRAW":
+        return <WithdrawModal emit={this.props.emit} />;
+      default:
+        return null;
+    }
+  }
+
+  render() {
+    return <div id="connext-overlay-modal">{this.renderView()}</div>;
+  }
+
+  showLoginUI() {
+    this.setState({ mode: "LOGIN" });
   }
 
   showDepositUI() {
