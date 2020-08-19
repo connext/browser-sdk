@@ -4,12 +4,13 @@ import WithdrawModal from "./WithdrawModal";
 import LoginModal from "./LoginModal";
 
 interface IProp {
-  onLoginSuccess: (email: string) => void;
+  emit: (event: string, ...args: any[]) => boolean;
 }
 
 interface IState {
   mode: string;
   isLoggedIn: boolean;
+  publicAddress: string;
   transferRecipient: string | null;
   transferAmount: string;
 }
@@ -20,6 +21,7 @@ class Modal extends React.Component<IProp, IState> {
     this.state = {
       mode: "LOGIN",
       isLoggedIn: false,
+      publicAddress: "",
       transferRecipient: null,
       transferAmount: "1.00",
     };
@@ -31,12 +33,12 @@ class Modal extends React.Component<IProp, IState> {
         {this.state.mode === "LOGIN" ? (
           <LoginModal
             isLoggedIn={this.state.isLoggedIn}
-            onLoginSuccess={this.props.onLoginSuccess}
+            emit={this.props.emit}
           />
         ) : this.state.mode === "DEPOSIT" ? (
           <DepositModal />
         ) : this.state.mode === "WITHDRAW" ? (
-          <WithdrawModal />
+          <WithdrawModal emit={this.props.emit} />
         ) : (
           <div>Hello World! {this.state.mode}</div>
         )}

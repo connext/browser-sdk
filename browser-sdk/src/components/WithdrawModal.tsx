@@ -1,33 +1,44 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 
-function WithdrawModal() {
-  const [showAddress, setShowAddress] = useState(false);
-  const [withdrawAddress, setWithdrawAddress] = useState("some eth address");
+import { isValidAddress } from "../helpers";
+import { WITHDRAW_SUCCESS_EVENT } from "../constants";
+
+function WithdrawModal({ emit }) {
+  const recipientRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
+
+  function withdraw(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (
+      !recipientRef ||
+      !recipientRef.current ||
+      isValidAddress(recipientRef.current.value)
+    ) {
+      console.log("Invalid address!");
+      return;
+    }
+
+    if (!e.currentTarget.checkValidity() || !amountRef || !amountRef.current) {
+      console.log("Invalid amount!");
+      return;
+    }
+
+    emit(WITHDRAW_SUCCESS_EVENT, {
+      amount: amountRef.current.value,
+      recipient: recipientRef.current.value,
+    });
+  }
   return (
     <div className="flex-column">
-      {showAddress ? (
-        <>
-          <h3>Withdraw to:</h3>
-          <input
-            type="text"
-            value={withdrawAddress}
-            onChange={(e) => setWithdrawAddress(e.target.value)}
-          />
-          <button
-            onClick={() => {
-              console.log(withdrawAddress);
-            }}
-          >
-            Confirm
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="underline" onClick={() => setShowAddress(true)}>
-            Or withdraw using existing crypto wallet
-          </div>
-        </>
-      )}
+      <>
+        <form onSubmit={withdraw}>
+          <h3>Please enter amount to withdraw and recipient.</h3>
+          <input required type="number" placeholder="Amount" ref={amountRef} />
+          <input required placeholder="Ethereum address" ref={recipientRef} />
+          <button type="submit">Withdraw</button>
+        </form>
+      </>
     </div>
   );
 }

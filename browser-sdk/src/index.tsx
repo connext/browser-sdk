@@ -14,6 +14,8 @@ import {
   CONNEXT_OVERLAY_ID,
   CONNEXT_IFRAME_ID,
   AUTHENTICATION_MESSAGE,
+  WITHDRAW_SUCCESS_EVENT,
+  LOGIN_SUCCESS_EVENT,
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
@@ -25,6 +27,7 @@ class ConnextSDK extends EventEmitter<string> {
   private network: string;
   private magic: Magic | undefined;
   // private channel: IConnextClient | undefined;
+  private userPublicIdentifier: string | undefined;
 
   private initialized = false;
 
@@ -68,59 +71,76 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    this.modal.showDepositUI();
+    this.modal?.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    this.modal.showWithdrawUI();
+    this.modal?.showWithdrawUI();
+    const { amount, recipient } = await new Promise((resolve) => {
+      this.on(WITHDRAW_SUCCESS_EVENT, (params) => {
+        resolve(params);
+      });
+    });
+    console.log({ amount, recipient });
+    try {
+      const result = await this.iframeRpc?.send({
+        method: "connext_withdraw",
+        params: { recipient, amount, assetId: "" },
+      });
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
     return false;
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    const result = await this.iframeRpc.send({ method: "connext_balance" });
-    return result;
+    // console.warn(this.channel?.getFreeBalance());
+    const result = await this.iframeRpc?.send({ method: "connext_balance" });
+    return result.balance;
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    this.modal.showTransferUI(recipient, amount);
+    this.modal?.showTransferUI(recipient, amount);
     return false;
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    const result = await this.iframeRpc.send({
+    const result = await this.iframeRpc?.send({
       method: "connext_getTransactionHistory",
     });
     return result;
   }
 
   private async init() {
-    if (this.initialized) {
+    if (this.modal) {
       return;
     }
 
@@ -138,7 +158,7 @@ class ConnextSDK extends EventEmitter<string> {
       window.document.body
     );
     this.modal = (ReactDOM.render(
-      <Modal onLoginSuccess={this.onLoginSuccess.bind(this)} />,
+      <Modal emit={this.emit.bind(this)} />,
       overlay
     ) as unknown) as Modal;
 
@@ -147,13 +167,14 @@ class ConnextSDK extends EventEmitter<string> {
         throw new Error("Iframe Provider is undefined");
       }
       if (this.iframeRpc.connected) {
-        resolve();
+        resolve(); // TODO: doesn't wait for component to be fully mounted
       } else {
         this.iframeRpc.once("connect", () => {
           resolve();
         });
       }
     });
+    this.iframeRpc?.subscribe();
 
     if (typeof this.iframeRpc === "undefined") {
       throw new Error("Iframe Provider is undefined");
@@ -215,7 +236,7 @@ class ConnextSDK extends EventEmitter<string> {
         },
         600_000 // 10 mins
       );
-      this.on("login_success", ({ email }) => {
+      this.on(LOGIN_SUCCESS_EVENT, ({ email }) => {
         clearTimeout(timeout);
         resolve(email);
       });
@@ -238,10 +259,6 @@ class ConnextSDK extends EventEmitter<string> {
         console.log(error);
       }
     }
-  }
-
-  private onLoginSuccess(email: string) {
-    this.emit("login_success", { email });
   }
 
   private async signAuthenticationMessage() {

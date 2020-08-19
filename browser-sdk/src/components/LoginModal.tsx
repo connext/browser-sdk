@@ -1,15 +1,16 @@
 import React, { useRef } from "react";
+import { LOGIN_SUCCESS_EVENT } from "../constants";
 
-function LoginModal({ isLoggedIn, onLoginSuccess }) {
+function LoginModal({ isLoggedIn, emit }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
-  async function loginUser(e: React.FormEvent<HTMLFormElement>) {
+  function loginUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!e.currentTarget.checkValidity() || !emailRef || !emailRef.current) {
       console.log("Invalid email!");
       return;
     }
-    onLoginSuccess(emailRef.current.value);
+    emit(LOGIN_SUCCESS_EVENT, { email: emailRef.current.value });
   }
 
   return (
