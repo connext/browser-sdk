@@ -61,7 +61,7 @@ class ConnextSDK extends EventEmitter<string> {
     if (!isLoggedIn) {
       if (typeof this.modal === "undefined") {
         throw new SDKError(
-          "Not initialized - make sure to await login() first before calling deposit()!"
+          "SDK not initialized! Please try again."
         );
       }
       this.modal.showLoginUI();
@@ -134,8 +134,22 @@ class ConnextSDK extends EventEmitter<string> {
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    this.modal.showTransferUI(recipient, amount);
-    return false;
+    try {
+      if (typeof this.iframeRpc === "undefined") {
+        throw new SDKError(
+          "Not initialized - make sure to await login() first before calling transfer()!"
+        );
+      }
+      const result = await this.iframeRpc.send({
+        method: "connext_transfer",
+        params: { recipient, amount, assetId: this.assetId },
+      });
+      console.log("transfer", result);
+      return Object.keys(result).length === 0;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
