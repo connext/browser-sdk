@@ -25,6 +25,7 @@ class App extends React.Component {
     if (typeof this.channel === "undefined") {
       throw new Error("Iframe client is not authenticated");
     }
+
     let result: any | undefined;
     switch (request.method) {
       case "connext_publicIdentifier":
@@ -67,15 +68,18 @@ class App extends React.Component {
         };
         break;
     }
+
     if (request.method.startsWith("chan_")) {
       result = await this.channel.channelProvider.send(
         request.method as ChannelMethods,
         request.params
       );
     }
+
     if (typeof result === "undefined") {
       throw new Error(`Failed to responde to request method:${request.method}`);
     }
+
     return result;
   }
 

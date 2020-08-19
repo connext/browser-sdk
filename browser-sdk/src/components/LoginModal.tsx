@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { LOGIN_SUCCESS_EVENT } from "../constants";
 
-function LoginModal({ isLoggedIn, emit }) {
+function LoginModal({ loginStage, emit }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
   function loginUser(e: React.FormEvent<HTMLFormElement>) {
@@ -15,9 +15,15 @@ function LoginModal({ isLoggedIn, emit }) {
 
   return (
     <div className="flex-column">
-      {isLoggedIn ? (
+      {loginStage ? (
         <>
-          <h3>Login Successful!</h3>
+          <h3>
+            {loginStage === "pending"
+              ? "Waiting for email confirmation..."
+              : loginStage === "success"
+              ? "Login Successful!"
+              : "Failed to Login. Try again!"}
+          </h3>
         </>
       ) : (
         <>

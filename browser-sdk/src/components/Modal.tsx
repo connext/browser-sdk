@@ -9,7 +9,7 @@ interface IProp {
 
 interface IState {
   mode: string;
-  isLoggedIn: boolean;
+  loginStage: string | null;
   publicAddress: string;
   transferRecipient: string | null;
   transferAmount: string;
@@ -20,7 +20,7 @@ class Modal extends React.Component<IProp, IState> {
     super(props);
     this.state = {
       mode: "",
-      isLoggedIn: false,
+      loginStage: null,
       publicAddress: "",
       transferRecipient: null,
       transferAmount: "1.00",
@@ -32,7 +32,7 @@ class Modal extends React.Component<IProp, IState> {
       case "LOGIN":
         return (
           <LoginModal
-            isLoggedIn={this.state.isLoggedIn}
+            loginStage={this.state.loginStage}
             emit={this.props.emit}
           />
         );

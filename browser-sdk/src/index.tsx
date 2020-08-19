@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import EventEmitter from "eventemitter3";
-import { Magic, RPCError, RPCErrorCode } from "magic-sdk";
+import { Magic } from "magic-sdk";
 // import { ChannelProvider } from "@connext/channel-provider";
 // import * as connext from "@connext/client";
 
@@ -9,6 +9,7 @@ import Modal from "./components/Modal";
 import {
   DEFAULT_IFRAME_SRC,
   DEFAULT_MAGIC_KEY,
+  DEFAULT_ASSET_ID,
   DEFAULT_NETWORK,
   CONNEXT_OVERLAY_STYLE,
   CONNEXT_OVERLAY_ID,
@@ -24,15 +25,15 @@ import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 class ConnextSDK extends EventEmitter<string> {
   private modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
+  private assetId: string;
   private network: string;
   private magic: Magic | undefined;
+  private pubId: string | undefined;
   // private channel: IConnextClient | undefined;
-  private userPublicIdentifier: string | undefined;
-
-  private initialized = false;
 
   constructor(opts?: ConnextSDKOptions) {
     super();
+    this.assetId = opts?.assetId || DEFAULT_ASSET_ID;
     this.network = opts?.network || DEFAULT_NETWORK;
     this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
       network: this.network as any,
@@ -44,12 +45,12 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   get publicIdentifier(): string {
-    if (typeof this.userPublicIdentifier === "undefined") {
+    if (typeof this.pubId === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before getting publicIdentifier!"
       );
     }
-    return this.userPublicIdentifier;
+    return this.pubId;
   }
 
   public async login(): Promise<boolean> {
@@ -58,7 +59,12 @@ class ConnextSDK extends EventEmitter<string> {
     const isLoggedIn = await this.isMagicLoggedIn();
 
     if (!isLoggedIn) {
-      this.modal?.showLoginUI();
+      if (typeof this.modal === "undefined") {
+        throw new SDKError(
+          "Not initialized - make sure to await login() first before calling deposit()!"
+        );
+      }
+      this.modal.showLoginUI();
       await this.loginWithMagic();
     }
 
@@ -69,22 +75,22 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    this.modal?.showDepositUI();
+    this.modal.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    this.modal?.showWithdrawUI();
+    this.modal.showWithdrawUI();
     const { amount, recipient } = await new Promise((resolve) => {
       this.on(WITHDRAW_SUCCESS_EVENT, (params) => {
         resolve(params);
@@ -92,9 +98,14 @@ class ConnextSDK extends EventEmitter<string> {
     });
     console.log({ amount, recipient });
     try {
-      const result = await this.iframeRpc?.send({
+      if (typeof this.iframeRpc === "undefined") {
+        throw new SDKError(
+          "Not initialized - make sure to await login() first before calling balance()!"
+        );
+      }
+      const result = await this.iframeRpc.send({
         method: "connext_withdraw",
-        params: { recipient, amount, assetId: "" },
+        params: { recipient, amount, assetId: this.assetId },
       });
       console.log(result);
     } catch (error) {
@@ -105,33 +116,38 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized) {
+    if (
+      typeof this.modal === "undefined" ||
+      typeof this.iframeRpc === "undefined"
+    ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    // console.warn(this.channel?.getFreeBalance());
-    const result = await this.iframeRpc?.send({ method: "connext_balance" });
+    const result = await this.iframeRpc.send({ method: "connext_balance" });
     return result.balance;
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized) {
+    if (typeof this.modal === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    this.modal?.showTransferUI(recipient, amount);
+    this.modal.showTransferUI(recipient, amount);
     return false;
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized) {
+    if (
+      typeof this.modal === "undefined" ||
+      typeof this.iframeRpc === "undefined"
+    ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    const result = await this.iframeRpc?.send({
+    const result = await this.iframeRpc.send({
       method: "connext_getTransactionHistory",
     });
     return result;
@@ -155,38 +171,13 @@ class ConnextSDK extends EventEmitter<string> {
     // });
 
     // mark this SDK as fully initialized
-    this.initialized = true;
   }
 
-  private async isMagicLoggedIn() {
+  private isMagicLoggedIn() {
     if (typeof this.magic === "undefined") {
       throw new SDKError("Magic SDK has not been initialized");
     }
-    if (typeof this.modal === "undefined") {
-      throw new SDKError("Modal has not been initialized");
-    }
-    try {
-      // Check if user is already logged in
-      const isLoggedIn = await this.magic.user.isLoggedIn();
-      if (isLoggedIn) {
-        this.modal.setState({ isLoggedIn: true });
-      }
-      return isLoggedIn;
-    } catch (error) {
-      if (error instanceof RPCError) {
-        switch (error.code) {
-          case RPCErrorCode.InternalError:
-            // Checking for isLoggedIn before being logged in always throws a -32603 InternalError
-            console.log(error);
-            break;
-          default:
-            break;
-        }
-      } else {
-        console.log(error);
-      }
-    }
-    return false;
+    return this.magic.user.isLoggedIn();
   }
 
   private async loginWithMagic() {
@@ -215,21 +206,12 @@ class ConnextSDK extends EventEmitter<string> {
     });
 
     try {
-      await this.magic.auth.loginWithMagicLink({ email });
-      this.modal.setState({ isLoggedIn: true });
+      this.modal.setState({ loginStage: "pending" });
+      await this.magic.auth.loginWithMagicLink({ email, showUI: false });
+      this.modal.setState({ loginStage: "success" });
     } catch (error) {
-      if (error instanceof RPCError) {
-        switch (error.code) {
-          case RPCErrorCode.MagicLinkFailedVerification:
-          case RPCErrorCode.MagicLinkExpired:
-          case RPCErrorCode.MagicLinkRateLimited:
-          case RPCErrorCode.UserAlreadyLoggedIn:
-            console.log(error);
-            break;
-        }
-      } else {
-        console.log(error);
-      }
+      this.modal.setState({ loginStage: "failure" });
+      throw error;
     }
   }
 
@@ -246,7 +228,10 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   private async authenticateIframe(signature: string) {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+    if (
+      typeof this.modal === "undefined" ||
+      typeof this.iframeRpc === "undefined"
+    ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
@@ -255,7 +240,7 @@ class ConnextSDK extends EventEmitter<string> {
       method: "connext_authenticate",
       params: { signature, network: this.network },
     });
-    this.userPublicIdentifier = result.publicIdentifier;
+    this.pubId = result.publicIdentifier;
   }
 
   private async waitForIframe() {
