@@ -1,6 +1,6 @@
 import React from "react";
 import * as connext from "@connext/client";
-import { IConnextClient, JsonRpcRequest, ChannelMethods } from "@connext/types";
+import { IConnextClient, JsonRpcRequest } from "@connext/types";
 import { utils } from "ethers";
 const { Magic } = require('@magic-sdk/admin');
 
@@ -11,94 +11,81 @@ class App extends React.Component {
   private channel: IConnextClient | undefined;
   private parentOrigin: string | undefined;
   private parentOriginIsAuthenticated = false;
-  private userDID: string | undefined;
+
+  appendToTransactionHistory(newItem: any) {
+    const transactionHistory = JSON.parse(window.localStorage.getItem('transactionHistory') || '[]');
+    window.localStorage.setItem('transactionHistory', JSON.stringify(transactionHistory.concat([newItem])));
+  }
 
   async handleRequest(request: JsonRpcRequest) {
     const channel = this.channel as IConnextClient;
-    let result: any | undefined;
     switch (request.method) {
       case "connext_login":
         // ensure the user is actually the same one that we have in localstorage
-        const existingUserDID = localStorage.getItem('userDID');
+        const existingUserDID = window.localStorage.getItem('userDID');
         const userDID = mAdmin.token.getIssuer(request.params.DID_token);
         if (existingUserDID !== null && existingUserDID !== userDID) {
           throw new Error(`Unauthorized! User ${userDID} is not the same as the user we are authenticated for.`);
         }
-        localStorage.setItem('userDID', userDID);
+        window.localStorage.setItem('userDID', userDID);
         this.parentOriginIsAuthenticated = true;
-
-        result = { publicIdentifier: channel.publicIdentifier };
-
-        // TODO: store this DID in localstorage, this ensures that the parent site is actually authenticated via Magic
-        break;
-      case "connext_publicIdentifier":
-        if (!this.parentOriginIsAuthenticated) {
-          throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
-        }
-        result = { publicIdentifier: channel.publicIdentifier };
-        break;
+        return { publicIdentifier: channel.publicIdentifier };
       case "connext_deposit":
         if (!this.parentOriginIsAuthenticated) {
           throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
         }
-        result = {
-          txhash: (
-            await channel.deposit({
-              amount: utils.parseEther(request.params.amount).toString(),
-              assetId: request.params.assetId,
-            })
-          ).transaction.hash,
-        };
-        break;
+        const depositResult = await channel.deposit({
+          amount: utils.parseEther(request.params.amount).toString(),
+          assetId: request.params.assetId,
+        });
+        this.appendToTransactionHistory({
+          type: "deposit",
+          value: request.params.amount,
+          timestamp: Date.now(),
+          txhash: depositResult.transaction.hash,
+        });
+        return {txhash: depositResult.transaction.hash};
       case "connext_withdraw":
         if (!this.parentOriginIsAuthenticated) {
           throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
         }
-        result = {
-          txhash: (
-            await channel.withdraw({
-              recipient: request.params.recipient,
-              amount: utils.parseEther(request.params.amount).toString(),
-              assetId: request.params.assetId,
-            })
-          ).transaction.hash,
-        };
-        break;
+        const withdrawResult = await channel.withdraw({
+          recipient: request.params.recipient,
+          amount: utils.parseEther(request.params.amount).toString(),
+          assetId: request.params.assetId,
+        });
+        this.appendToTransactionHistory({
+          type: "withdraw",
+          value: request.params.amount,
+          timestamp: Date.now(),
+          txhash: withdrawResult.transaction.hash,
+        });
+        return {txhash: withdrawResult.transaction.hash,};
       case "connext_balance":
         if (!this.parentOriginIsAuthenticated) {
           throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
         }
-        result = {
-          balance: "",
-        };
-        break;
+        const freeBalance = await channel.getFreeBalance();
+        const userFreeBalance = freeBalance[channel.signerAddress].toString();
+        return {balance: userFreeBalance};
       case "connext_transfer":
         if (!this.parentOriginIsAuthenticated) {
           throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
         }
-        result = {
-          paymentId: "",
-        };
-        break;
+        return {paymentId: ""};
       case "connext_getTransactionHistory":
         if (!this.parentOriginIsAuthenticated) {
           throw new Error(`Unauthorized! Call connext_login first with a valid DID token`);
         }
-        result = {
-          transactions: [],
-        };
-        break;
+        const transactionHistory = JSON.parse(window.localStorage.getItem('transactionHistory') || '[]');
+        return {transactions: transactionHistory};
     }
-    if (request.method.startsWith("chan_") && this.userDID) {
-      result = await channel.channelProvider.send(
-        request.method as ChannelMethods,
-        request.params
-      );
-    }
-    if (typeof result === "undefined") {
-      throw new Error(`Failed to respond to request method: ${request.method}`);
-    }
-    return result;
+    // if (request.method.startsWith("chan_") && this.userDID) {
+    //   result = await channel.channelProvider.send(
+    //     request.method as ChannelMethods,
+    //     request.params
+    //   );
+    // }
   }
 
   async handleIncomingMessages(e: MessageEvent) {
@@ -124,14 +111,8 @@ class App extends React.Component {
 
   async componentDidMount() {
     this.parentOrigin = new URL(document.referrer).origin;
-    this.channel = await connext.connect("rinkeby", {
-      ethProviderUrl: 'https://indra.connext.network/api/ethprovider',
-    });
-    window.addEventListener(
-      "message",
-      (e) => this.handleIncomingMessages(e),
-      true
-    );
+    this.channel = await connext.connect("rinkeby");
+    window.addEventListener("message", (e) => this.handleIncomingMessages(e), true);
     window.parent.postMessage("event:iframe-initialized", this.parentOrigin);
   }
 

@@ -12,9 +12,7 @@ export class IframeRpcConnection extends EventEmitter<string>
   constructor(opts: IframeOptions) {
     super();
     this.opts = opts;
-    window.addEventListener("DOMContentLoaded", () => {
-      this.render();
-    });
+    this.render();
   }
 
   get connected() {
@@ -51,10 +49,7 @@ export class IframeRpcConnection extends EventEmitter<string>
           }
         }
       });
-      this.iframe.contentWindow.postMessage(
-        JSON.stringify(payload),
-        this.iframe.src
-      );
+      this.iframe.contentWindow.postMessage(JSON.stringify(request), this.iframe.src);
     });
   }
 
@@ -62,7 +57,6 @@ export class IframeRpcConnection extends EventEmitter<string>
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
         this.emit("connect");
-        this.emit("open");
         resolve();
       });
       this.iframe = renderElement(

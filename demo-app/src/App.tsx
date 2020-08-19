@@ -8,8 +8,6 @@ function App() {
     await connext.login();
     await connext.deposit();
   };
-  // @ts-ignore
-  window.app = this;
   return (
     <div className="App">
       <div className="Content">

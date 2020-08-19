@@ -21,9 +21,9 @@ class ConnextSDK {
   public modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
   public magic: Magic | undefined;
-  private magicUserMetaData: MagicUserMetadata | undefined;
   private loginTarget: EventTarget;
   private channel: IConnextClient | undefined;
+  private userPublicIdentifier: string | undefined;
 
   private initialized = false;
 
@@ -38,43 +38,36 @@ class ConnextSDK {
     this.loginTarget = new EventTarget();
   }
 
-  get publicIdentifier(): string {
-    if (!this.initialized || typeof this.channel === "undefined") {
+  get publicIdentifier(): string | null {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return this.channel.publicIdentifier;
+    if (!this.userPublicIdentifier) {
+      return null;
+    }
+    return this.userPublicIdentifier;
   }
 
   public async login(): Promise<boolean> {
     await this.init();
 
     try {
-      // Check if user is already logged in
-      const isUserLoggedIn = await this.magic?.user.isLoggedIn();
-      if (isUserLoggedIn) {
-        this.magicUserMetaData = await this.magic?.user.getMetadata();
+      // Check if user is already logged in, and authenticate with the iframe app using the DID token
+      if (await this.magic?.user.isLoggedIn()) {
+        const userDIDtoken = await this.magic?.user.getIdToken();
+        const result = await this.iframeRpc?.send({method: "connext_login", params: {DID_token: userDIDtoken}});
+        this.userPublicIdentifier = result.publicIdentifier;
         this.modal?.setState({ isLoggedIn: true });
         return true;
       }
     } catch (error) {
-      if (error instanceof RPCError) {
-        switch (error.code) {
-          case RPCErrorCode.InternalError:
-            // Checking for isLoggedIn before being logged in always throws a -32603 InternalError 
-            console.log(error);
-            break;
-          default:
-            break;
-        }
-      } else {
-        console.log(error);
-      }
+      console.log(error);
     }
 
     // Listen for user to enter email
-    const email: string = await new Promise((resolve, reject) => {
+    const email: string = await new Promise((resolve) => {
       this.loginTarget.addEventListener("login", {
         handleEvent: (event: CustomEvent) => {
           resolve(event.detail);
@@ -83,82 +76,73 @@ class ConnextSDK {
     })
 
     try {
-      await this.magic?.auth.loginWithMagicLink({ email });
-      this.magicUserMetaData = await this.magic?.user.getMetadata();
+      // Authenticate with the iframe app using the DID token
+      const userDIDtoken = await this.magic?.auth.loginWithMagicLink({ email });
+      const result = await this.iframeRpc?.send({method: "connext_login", params: {DID_token: userDIDtoken}});
+      this.userPublicIdentifier = result.publicIdentifier;
       this.modal?.setState({ isLoggedIn: true });
-      return true;
     } catch (error) {
-      if (error instanceof RPCError) {
-        switch (error.code) {
-          case RPCErrorCode.MagicLinkFailedVerification:
-          case RPCErrorCode.MagicLinkExpired:
-          case RPCErrorCode.MagicLinkRateLimited:
-          case RPCErrorCode.UserAlreadyLoggedIn:
-            console.log(error);
-            break;
-        }
-      } else {
-        console.log(error);
-      }
-      return false;
+      console.log(error);
+      throw error;
     }
+    return false;
   }
 
   public async deposit(): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    this.modal.showDepositUI();
+    this.modal?.showDepositUI();
     return false;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling withdraw()!"
       );
     }
-    this.modal.showWithdrawUI();
+    this.modal?.showWithdrawUI();
     return false;
   }
 
   public async balance(): Promise<string> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
     console.warn(this.channel?.getFreeBalance());
-    const result = await this.iframeRpc.send({ method: "connext_balance" });
-    return result;
+    const result = await this.iframeRpc?.send({ method: "connext_balance" });
+    return result.balance;
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (!this.initialized || typeof this.modal === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
-    this.modal.showTransferUI(recipient, amount);
+    this.modal?.showTransferUI(recipient, amount);
     return false;
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (!this.initialized || typeof this.iframeRpc === "undefined") {
+    if (!this.initialized) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    const result = await this.iframeRpc.send({
+    const result = await this.iframeRpc?.send({
       method: "connext_getTransactionHistory",
     });
     return result;
   }
 
   private async init() {
-    if (this.initialized) {
+    if (this.modal) {
       return;
     }
 
@@ -189,13 +173,14 @@ class ConnextSDK {
         throw new Error("Iframe Provider is undefined");
       }
       if (this.iframeRpc.connected) {
-        resolve();
+        resolve(); // TODO: doesn't wait for component to be fully mounted
       } else {
         this.iframeRpc.once("connect", () => {
           resolve();
         });
       }
     });
+    this.iframeRpc?.subscribe();
 
     if (typeof this.iframeRpc === "undefined") {
       throw new Error("Iframe Provider is undefined");
