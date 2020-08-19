@@ -6,19 +6,16 @@ function DepositModal() {
   const depositAddress = "some eth address";
   return (
     <div className="flex-column">
-      {showQR ?
+      {showQR ? (
         <>
           <QRCode value={depositAddress} />
-          <input
-            type="text"
-            value={depositAddress}
-            readOnly
-          />
+          <input type="text" value={depositAddress} readOnly />
         </>
-        :
+      ) : (
         <div className="underline" onClick={() => setShowQR(true)}>
           Or deposit using existing crypto wallet
-        </div>}
+        </div>
+      )}
     </div>
   );
 }

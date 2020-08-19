@@ -1,7 +1,5 @@
 import { ChannelProvider } from "@connext/channel-provider";
 
-import { CONNEXT_LOGIN_EVENT } from "../constants";
-
 export interface ConnextSDKOptions {
   network?: string;
   magicKey?: string;
@@ -18,10 +16,4 @@ export interface ConnextTransaction {
 export interface IframeOptions {
   id: string;
   src: string;
-}
-
-export class LoginEvent extends CustomEvent<string> {
-  constructor(email: string) {
-    super(CONNEXT_LOGIN_EVENT, { detail: email });
-  }
 }

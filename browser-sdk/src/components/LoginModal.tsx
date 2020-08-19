@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
-import { LoginEvent } from "./../typings";
 
-function LoginModal({ isLoggedIn, loginTarget }) {
+function LoginModal({ isLoggedIn, onLoginSuccess }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
   async function loginUser(e: React.FormEvent<HTMLFormElement>) {
@@ -10,9 +9,7 @@ function LoginModal({ isLoggedIn, loginTarget }) {
       console.log("Invalid email!");
       return;
     }
-    const email = emailRef.current.value;
-    const event = new LoginEvent(email);
-    loginTarget.dispatchEvent(event);
+    onLoginSuccess(emailRef.current.value);
   }
 
   return (

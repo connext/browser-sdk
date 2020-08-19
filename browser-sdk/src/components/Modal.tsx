@@ -2,11 +2,9 @@ import React from "react";
 import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
 import LoginModal from "./LoginModal";
-import { Magic } from "magic-sdk";
 
 interface IProp {
-  magic: Magic | undefined;
-  loginTarget: EventTarget;
+  onLoginSuccess: (email: string) => void;
 }
 
 interface IState {
@@ -30,18 +28,18 @@ class Modal extends React.Component<IProp, IState> {
   render() {
     return (
       <div id="connext-overlay-modal">
-        {
-          this.state.mode === "LOGIN" ?
-            <LoginModal
-              isLoggedIn={this.state.isLoggedIn}
-              loginTarget={this.props.loginTarget}
-            /> :
-            this.state.mode === "DEPOSIT" ?
-            <DepositModal /> :
-            this.state.mode === "WITHDRAW" ?
-            <WithdrawModal /> :
-            <div>Hello World! {this.state.mode}</div>
-        }
+        {this.state.mode === "LOGIN" ? (
+          <LoginModal
+            isLoggedIn={this.state.isLoggedIn}
+            onLoginSuccess={this.props.onLoginSuccess}
+          />
+        ) : this.state.mode === "DEPOSIT" ? (
+          <DepositModal />
+        ) : this.state.mode === "WITHDRAW" ? (
+          <WithdrawModal />
+        ) : (
+          <div>Hello World! {this.state.mode}</div>
+        )}
       </div>
     );
   }
