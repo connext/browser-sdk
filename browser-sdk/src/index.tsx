@@ -21,7 +21,7 @@ class ConnextSDK {
   public modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
   public magic: Magic | undefined;
-  private loginTarget: EventTarget;
+  private connextTarget: EventTarget;
   private channel: IConnextClient | undefined;
   private userPublicIdentifier: string | undefined;
 
@@ -35,7 +35,7 @@ class ConnextSDK {
       src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
-    this.loginTarget = new EventTarget();
+    this.connextTarget = new EventTarget();
   }
 
   get publicIdentifier(): string | null {
@@ -68,7 +68,7 @@ class ConnextSDK {
 
     // Listen for user to enter email
     const email: string = await new Promise((resolve) => {
-      this.loginTarget.addEventListener("login", {
+      this.connextTarget.addEventListener("login", {
         handleEvent: (event: CustomEvent) => {
           resolve(event.detail);
         }
@@ -105,6 +105,16 @@ class ConnextSDK {
       );
     }
     this.modal?.showWithdrawUI();
+    const {amount, recipient} = await new Promise((resolve) => {
+      this.connextTarget.addEventListener("withdraw", {
+        handleEvent: (event: CustomEvent) => {
+          resolve(event.detail);
+        }
+      })
+    })
+    console.log({amount, recipient})
+    const result = await this.iframeRpc?.send({method: "connext_withdraw", params: {recipient, amount, assetId: ""}});
+    console.log(result);
     return false;
   }
 
@@ -164,7 +174,7 @@ class ConnextSDK {
       window.document.body
     );
     this.modal = (ReactDOM.render(
-      <Modal magic={this.magic} loginTarget={this.loginTarget} />,
+      <Modal magic={this.magic} connextTarget={this.connextTarget} />,
       overlay
     ) as unknown) as Modal;
 

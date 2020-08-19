@@ -6,7 +6,7 @@ import { Magic } from "magic-sdk";
 
 interface IProp {
   magic: Magic | undefined;
-  loginTarget: EventTarget;
+  connextTarget: EventTarget;
 }
 
 interface IState {
@@ -36,12 +36,14 @@ class Modal extends React.Component<IProp, IState> {
           this.state.mode === "LOGIN" ?
             <LoginModal
               isLoggedIn={this.state.isLoggedIn}
-              loginTarget={this.props.loginTarget}
+              connextTarget={this.props.connextTarget}
             /> :
             this.state.mode === "DEPOSIT" ?
             <DepositModal /> :
             this.state.mode === "WITHDRAW" ?
-            <WithdrawModal /> :
+            <WithdrawModal 
+              connextTarget={this.props.connextTarget}
+            /> :
             <div>Hello World! {this.state.mode}</div>
         }
       </div>

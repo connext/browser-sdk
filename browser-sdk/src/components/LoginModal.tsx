@@ -1,16 +1,16 @@
 import React, { useRef } from "react";
 
-function LoginModal({ isLoggedIn, loginTarget }) {
+function LoginModal({ isLoggedIn, connextTarget }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
-  async function loginUser(e: React.FormEvent<HTMLFormElement>) {
+  function loginUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!e.currentTarget.checkValidity() || !emailRef || !emailRef.current) {
       console.log("Invalid email!");
       return;
     }
     const email = emailRef.current.value;
-    loginTarget.dispatchEvent(new CustomEvent("login", {detail: email}));
+    connextTarget.dispatchEvent(new CustomEvent("login", {detail: email}));
   }
 
   return (

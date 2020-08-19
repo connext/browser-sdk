@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 
-function WithdrawModal() {
+function WithdrawModal({connextTarget}) {
   const [showAddress, setShowAddress] = useState(false);
   const [withdrawAddress, setWithdrawAddress] = useState("some eth address");
+  function withdraw() {
+    connextTarget.dispatchEvent(new CustomEvent("withdraw", {detail: {recipient: withdrawAddress, amount: 0, assetId: ""}}));
+  }
   return (
     <div className="flex-column">
       {showAddress ?
@@ -12,7 +15,7 @@ function WithdrawModal() {
             type="text"
             value={withdrawAddress}
             onChange={e => setWithdrawAddress(e.target.value)} />
-          <button onClick={() => { console.log(withdrawAddress); }}>Confirm</button>
+          <button onClick={withdraw}>Confirm</button>
         </> :
         <>
           <div className="underline" onClick={() => setShowAddress(true)}>
