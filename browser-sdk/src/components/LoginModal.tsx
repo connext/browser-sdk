@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import { LoginEvent } from "./../typings";
 
-
 function LoginModal({ isLoggedIn, loginTarget }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -12,15 +11,17 @@ function LoginModal({ isLoggedIn, loginTarget }) {
       return;
     }
     const email = emailRef.current.value;
-    loginTarget.dispatchEvent(new LoginEvent(email));
+    const event = new LoginEvent(email);
+    loginTarget.dispatchEvent(event);
   }
 
   return (
     <div className="flex-column">
-      {isLoggedIn ?
+      {isLoggedIn ? (
         <>
           <h3>Login Successful!</h3>
-        </> :
+        </>
+      ) : (
         <>
           <form onSubmit={loginUser}>
             <h3>Please enter your email to login.</h3>
@@ -33,7 +34,7 @@ function LoginModal({ isLoggedIn, loginTarget }) {
             <button type="submit">Send me a login link!</button>
           </form>
         </>
-      }
+      )}
     </div>
   );
 }

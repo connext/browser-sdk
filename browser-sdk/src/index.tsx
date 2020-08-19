@@ -1,28 +1,28 @@
-import React, { useReducer } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import { Magic, MagicUserMetadata, RPCError, RPCErrorCode } from "magic-sdk";
-import { ChannelProvider } from "@connext/channel-provider";
+import { Magic, RPCError, RPCErrorCode } from "magic-sdk";
+// import { ChannelProvider } from "@connext/channel-provider";
 // import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
-  CONNEXT_OVERLAY_STYLE,
   DEFAULT_IFRAME_SRC,
   DEFAULT_MAGIC_KEY,
   DEFAULT_NETWORK,
+  CONNEXT_OVERLAY_STYLE,
   CONNEXT_OVERLAY_ID,
   CONNEXT_IFRAME_ID,
+  CONNEXT_LOGIN_EVENT,
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction, LoginEvent } from "./typings";
-import { IConnextClient } from "@connext/types";
+// import { IConnextClient } from "@connext/types";
 
 class ConnextSDK {
-  public modal: Modal | undefined;
+  private modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
-  public magic: Magic | undefined;
-  private magicUserMetaData: MagicUserMetadata | undefined;
-  private loginTarget: EventTarget;
+  private magic: Magic | undefined;
+  private loginTarget: EventTarget | undefined;
   // private channel: IConnextClient | undefined;
 
   private initialized = false;
@@ -35,7 +35,6 @@ class ConnextSDK {
       src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
-    this.loginTarget = new EventTarget();
   }
 
   public async publicIdentifier(): Promise<string> {
@@ -57,7 +56,6 @@ class ConnextSDK {
       // Check if user is already logged in
       const isUserLoggedIn = await this.magic?.user.isLoggedIn();
       if (isUserLoggedIn) {
-        this.magicUserMetaData = await this.magic?.user.getMetadata();
         this.modal?.setState({ isLoggedIn: true });
         return true;
       }
@@ -78,7 +76,12 @@ class ConnextSDK {
 
     // Listen for user to enter email
     const email: string = await new Promise((resolve, reject) => {
-      this.loginTarget.addEventListener("login", {
+      if (typeof this.loginTarget === "undefined") {
+        throw new SDKError(
+          "Not initialized - make sure to create login event target before calling login()!"
+        );
+      }
+      this.loginTarget.addEventListener(CONNEXT_LOGIN_EVENT, {
         handleEvent: (event: LoginEvent) => {
           resolve(event.detail);
         },
@@ -87,7 +90,6 @@ class ConnextSDK {
 
     try {
       await this.magic?.auth.loginWithMagicLink({ email });
-      this.magicUserMetaData = await this.magic?.user.getMetadata();
       this.modal?.setState({ isLoggedIn: true });
       return true;
     } catch (error) {
@@ -163,6 +165,8 @@ class ConnextSDK {
     if (this.initialized) {
       return;
     }
+
+    this.loginTarget = new EventTarget();
 
     // const client = await connext.connect({
     //   channelProvider: new ChannelProvider(new IframeRpcConnection(this.iframeElem as HTMLIFrameElement)),
