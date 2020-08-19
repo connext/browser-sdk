@@ -1,35 +1,29 @@
-import React, { useRef, useContext } from "react";
+import React, { useRef } from "react";
+import { LoginEvent } from "./../typings";
 
 
-function LoginModal({magic, isLoggedIn, refreshLogin}) {
+function LoginModal({ isLoggedIn, loginTarget }) {
   const emailRef = useRef<HTMLInputElement>(null);
 
   async function loginUser(e) {
     e.preventDefault();
     if (!e.target.checkValidity() || !emailRef || !emailRef.current) {
       console.log("Invalid email!");
-      return
+      return;
     }
     const email = emailRef.current.value;
-    await magic.auth.loginWithMagicLink({ email });
-    await refreshLogin();
-  }
-
-  async function logoutUser() {
-    await magic.user.logout();
-    await refreshLogin();
+    loginTarget.dispatchEvent(new LoginEvent(email));
   }
 
   return (
     <div className="flex-column">
       {isLoggedIn ?
         <>
-          <h1>Login Successful!</h1>
-          <button onClick={logoutUser}>Logout</button>
-        </>:
+          <h3>Login Successful!</h3>
+        </> :
         <>
           <form onSubmit={loginUser}>
-            <h1>Please enter your email to login.</h1>
+            <h3>Please enter your email to login.</h3>
             <input
               required
               type="email"
@@ -41,7 +35,7 @@ function LoginModal({magic, isLoggedIn, refreshLogin}) {
         </>
       }
     </div>
-  )
+  );
 }
 
 export default LoginModal;

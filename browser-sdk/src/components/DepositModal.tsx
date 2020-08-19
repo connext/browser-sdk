@@ -19,7 +19,7 @@ function DepositModal() {
           Or deposit using existing crypto wallet
         </div>}
     </div>
-  )
+  );
 }
 
 export default DepositModal;

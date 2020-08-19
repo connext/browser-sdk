@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useReducer } from "react";
 import ReactDOM from "react-dom";
-import { Magic } from "magic-sdk";
+import { Magic, MagicUserMetadata, RPCError, RPCErrorCode } from "magic-sdk";
 
 import Modal from "./components/Modal";
 import {
@@ -12,13 +12,14 @@ import {
   CONNEXT_IFRAME_ID,
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
-import { ConnextSDKOptions, ConnextTransaction } from "./typings";
+import { ConnextSDKOptions, ConnextTransaction, LoginEvent } from "./typings";
 
 class ConnextSDK {
   public modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
   public magic: Magic | undefined;
-
+  private magicUserMetaData: MagicUserMetadata | undefined;
+  private loginTarget: EventTarget;
   private initialized = false;
 
   constructor(opts?: ConnextSDKOptions) {
@@ -29,19 +30,64 @@ class ConnextSDK {
       src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
+    this.loginTarget = new EventTarget();
   }
 
   public async login(): Promise<boolean> {
     await this.init();
 
-    if (this.modal?.state.isLoggedIn) {
-      console.log("Logged in!");
-      return true
+    try {
+      // Check if user is already logged in
+      const isUserLoggedIn = await this.magic?.user.isLoggedIn();
+      if (isUserLoggedIn) {
+        this.magicUserMetaData = await this.magic?.user.getMetadata();
+        this.modal?.setState({ isLoggedIn: true });
+        return true;
+      }
+    } catch (error) {
+      if (error instanceof RPCError) {
+        switch (error.code) {
+          case RPCErrorCode.InternalError:
+            // Checking for isLoggedIn before being logged in always throws a -32603 InternalError 
+            console.log(error);
+            break;
+          default:
+            break;
+        }
+      } else {
+        console.log(error);
+      }
     }
-    console.log("Modal state", this.modal?.state);
-    // TODO: magic link
 
-    return true;
+    // Listen for user to enter email
+    const email: string = await new Promise((resolve, reject) => {
+      this.loginTarget.addEventListener("login", {
+        handleEvent: (event: LoginEvent) => {
+          resolve(event.detail);
+        }
+      })
+    })
+
+    try {
+      await this.magic?.auth.loginWithMagicLink({ email });
+      this.magicUserMetaData = await this.magic?.user.getMetadata();
+      this.modal?.setState({ isLoggedIn: true });
+      return true;
+    } catch (error) {
+      if (error instanceof RPCError) {
+        switch (error.code) {
+          case RPCErrorCode.MagicLinkFailedVerification:
+          case RPCErrorCode.MagicLinkExpired:
+          case RPCErrorCode.MagicLinkRateLimited:
+          case RPCErrorCode.UserAlreadyLoggedIn:
+            console.log(error);
+            break;
+        }
+      } else {
+        console.log(error);
+      }
+      return false;
+    }
   }
 
   public async publicIdentifier(): Promise<string | null> {
@@ -131,7 +177,7 @@ class ConnextSDK {
       window.document.body
     );
     this.modal = (ReactDOM.render(
-      <Modal magic={this.magic}/>,
+      <Modal magic={this.magic} loginTarget={this.loginTarget} />,
       overlay
     ) as unknown) as Modal;
 
