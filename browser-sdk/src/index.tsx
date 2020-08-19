@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import * as connext from "@connext/client";
+// import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
@@ -21,7 +21,7 @@ class ConnextSDK {
   public modal: Modal | undefined;
   private magic: Magic | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
-  private channel: IConnextClient | undefined;
+  // private channel: IConnextClient | undefined;
 
   private initialized = false;
 
@@ -35,13 +35,16 @@ class ConnextSDK {
     });
   }
 
-  get publicIdentifier(): string {
-    if (!this.initialized || typeof this.channel === "undefined") {
+  public async publicIdentifier(): Promise<string> {
+    if (!this.initialized || typeof this.iframeRpc === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return this.channel.publicIdentifier;
+    const result = await this.iframeRpc.send({
+      method: "connext_publicIdentifier",
+    });
+    return result;
   }
 
   public async login(): Promise<boolean> {
@@ -145,9 +148,9 @@ class ConnextSDK {
       throw new Error("Iframe Provider is undefined");
     }
 
-    this.channel = await connext.connect({
-      channelProvider: new ChannelProvider(this.iframeRpc),
-    });
+    // this.channel = await connext.connect({
+    //   channelProvider: new ChannelProvider(this.iframeRpc),
+    // });
 
     // mark this SDK as fully initialized
     this.initialized = true;
