@@ -10,8 +10,8 @@ export default {
   output: [{ file: pkg.main, format: "umd", name: "ConnextSDK" }],
   plugins: [
     nodeResolve({
-      preferBuiltins: true,
-      modulesOnly: true,
+      // preferBuiltins: true,
+      // modulesOnly: true,
     }), // resolve module names using node_modules and the standard Node module resolution algorithm
     commonjs(), // compile the module to CommonJS (required in order to support the UMD standard)
     json(),

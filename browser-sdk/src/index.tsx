@@ -2,7 +2,7 @@ import React, { useReducer } from "react";
 import ReactDOM from "react-dom";
 import { Magic, MagicUserMetadata, RPCError, RPCErrorCode } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import * as connext from "@connext/client";
+// import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
@@ -23,7 +23,7 @@ class ConnextSDK {
   public magic: Magic | undefined;
   private magicUserMetaData: MagicUserMetadata | undefined;
   private loginTarget: EventTarget;
-  private channel: IConnextClient | undefined;
+  // private channel: IConnextClient | undefined;
 
   private initialized = false;
 
@@ -38,13 +38,16 @@ class ConnextSDK {
     this.loginTarget = new EventTarget();
   }
 
-  get publicIdentifier(): string {
-    if (!this.initialized || typeof this.channel === "undefined") {
+  public async publicIdentifier(): Promise<string> {
+    if (!this.initialized || typeof this.iframeRpc === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    return this.channel.publicIdentifier;
+    const result = await this.iframeRpc.send({
+      method: "connext_publicIdentifier",
+    });
+    return result;
   }
 
   public async login(): Promise<boolean> {
@@ -62,7 +65,7 @@ class ConnextSDK {
       if (error instanceof RPCError) {
         switch (error.code) {
           case RPCErrorCode.InternalError:
-            // Checking for isLoggedIn before being logged in always throws a -32603 InternalError 
+            // Checking for isLoggedIn before being logged in always throws a -32603 InternalError
             console.log(error);
             break;
           default:
@@ -78,9 +81,9 @@ class ConnextSDK {
       this.loginTarget.addEventListener("login", {
         handleEvent: (event: LoginEvent) => {
           resolve(event.detail);
-        }
-      })
-    })
+        },
+      });
+    });
 
     try {
       await this.magic?.auth.loginWithMagicLink({ email });
@@ -200,9 +203,9 @@ class ConnextSDK {
       throw new Error("Iframe Provider is undefined");
     }
 
-    this.channel = await connext.connect({
-      channelProvider: new ChannelProvider(this.iframeRpc),
-    });
+    // this.channel = await connext.connect({
+    //   channelProvider: new ChannelProvider(this.iframeRpc),
+    // });
 
     // mark this SDK as fully initialized
     this.initialized = true;
