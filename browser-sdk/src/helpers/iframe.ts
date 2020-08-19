@@ -70,7 +70,7 @@ export class IframeRpcConnection extends EventEmitter<string>
         {
           id: this.opts.id,
           src: this.opts.src,
-          style: "width:0;height:0;border:0; border:none;",
+          style: "width:0;height:0;border:0;border:none;display:block",
         },
         window.document.body
       ) as HTMLIFrameElement;
