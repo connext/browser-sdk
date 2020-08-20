@@ -10,6 +10,7 @@ interface IProp {
 interface IState {
   mode: string;
   loginStage: string | null;
+  depositStage: string | null;
   publicAddress: string;
   transferRecipient: string | null;
   transferAmount: string;
@@ -21,6 +22,7 @@ class Modal extends React.Component<IProp, IState> {
     this.state = {
       mode: "",
       loginStage: null,
+      depositStage: null,
       publicAddress: "",
       transferRecipient: null,
       transferAmount: "1.00",

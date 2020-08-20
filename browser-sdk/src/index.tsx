@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import EventEmitter from "eventemitter3";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import { providers } from "ethers";
+import { BigNumber } from "ethers";
 import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
@@ -16,12 +16,15 @@ import {
   AUTHENTICATION_MESSAGE,
   WITHDRAW_SUCCESS_EVENT,
   LOGIN_SUCCESS_EVENT,
+  MULTISIG_BALANCE_PRE_DEPOSIT,
+  DEPOSIT_SUCCESS_EVENT,
 } from "./constants";
 import {
   IframeRpcConnection,
   renderElement,
   SDKError,
   getSdkOptions,
+  getFreeBalanceOnChain,
 } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 import { IConnextClient } from "@connext/types";
@@ -48,6 +51,7 @@ class ConnextSDK extends EventEmitter<string> {
       src: DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
+    this.checkDepositSubscription();
   }
 
   get publicIdentifier(): string {
@@ -79,12 +83,17 @@ class ConnextSDK extends EventEmitter<string> {
   }
 
   public async deposit(): Promise<boolean> {
-    if (typeof this.modal === "undefined") {
+    if (
+      typeof this.modal === "undefined" ||
+      typeof this.channel === "undefined"
+    ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
+    this.channel.requestDepositRights({ assetId: this.assetId });
     this.modal.showDepositUI();
+    await this.subscribeToDeposit();
     return false;
   }
 
@@ -150,8 +159,7 @@ class ConnextSDK extends EventEmitter<string> {
         amount,
         assetId: this.assetId,
       });
-      console.log("transfer", result);
-      return Object.keys(result).length === 0;
+      return true;
     } catch (error) {
       console.log(error);
       throw error;
@@ -278,6 +286,84 @@ class ConnextSDK extends EventEmitter<string> {
         });
       }
     });
+  }
+
+  private async getOnChainBalance() {
+    if (typeof this.channel === "undefined") {
+      throw new SDKError(
+        "Not initialized - make sure to await login() first before calling publicIdentifier()!"
+      );
+    }
+    const balance = await getFreeBalanceOnChain(
+      this.channel.multisigAddress,
+      this.channel.ethProvider,
+      this.assetId
+    );
+    return balance;
+  }
+
+  private async checkDepositSubscription() {
+    const preDepositBalance = window.localStorage.getItem(
+      MULTISIG_BALANCE_PRE_DEPOSIT
+    );
+    if (preDepositBalance) {
+      const balance = await this.getOnChainBalance();
+      if (BigNumber.from(balance).gt(BigNumber.from(preDepositBalance))) {
+        await this.onDepositSuccess();
+      } else {
+        await this.subscribeToDeposit();
+      }
+    }
+  }
+
+  private async subscribeToDeposit() {
+    if (typeof this.channel === "undefined") {
+      throw new SDKError("Not initialized");
+    }
+    const preDepositBalance = await this.getOnChainBalance();
+    window.localStorage.setItem(
+      MULTISIG_BALANCE_PRE_DEPOSIT,
+      preDepositBalance
+    );
+    this.channel.ethProvider.on("block", this.onNewBlock.bind(this));
+  }
+
+  private async unsubscribeToDeposit() {
+    if (typeof this.channel === "undefined") {
+      throw new SDKError("Not initialized");
+    }
+    this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
+  }
+
+  private async onNewBlock() {
+    if (typeof this.channel === "undefined") {
+      throw new SDKError("Not initialized");
+    }
+    this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
+    const preDepositBalance = window.localStorage.getItem(
+      MULTISIG_BALANCE_PRE_DEPOSIT
+    );
+    if (preDepositBalance === null) {
+      await this.unsubscribeToDeposit();
+    }
+    const balance = await this.getOnChainBalance();
+    if (BigNumber.from(balance).gt(BigNumber.from(preDepositBalance))) {
+      await this.onDepositSuccess();
+    }
+  }
+
+  private async onDepositSuccess() {
+    if (
+      typeof this.modal === "undefined" ||
+      typeof this.channel === "undefined"
+    ) {
+      throw new SDKError("Not initialized");
+    }
+    window.localStorage.removeItem(MULTISIG_BALANCE_PRE_DEPOSIT);
+    this.emit(DEPOSIT_SUCCESS_EVENT);
+    await this.unsubscribeToDeposit();
+    this.channel.rescindDepositRights({ assetId: this.assetId });
+    this.modal.setState({ depositStage: "success" });
   }
 
   private async renderModal() {
