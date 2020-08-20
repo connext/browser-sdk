@@ -66,9 +66,7 @@ class ConnextSDK extends EventEmitter<string> {
 
     if (!isLoggedIn) {
       if (typeof this.modal === "undefined") {
-        throw new SDKError(
-          "SDK not initialized! Please try again."
-        );
+        throw new SDKError("SDK not initialized! Please try again.");
       }
       this.modal.showLoginUI();
       await this.loginWithMagic();
@@ -142,14 +140,15 @@ class ConnextSDK extends EventEmitter<string> {
       );
     }
     try {
-      if (typeof this.iframeRpc === "undefined") {
+      if (typeof this.channel === "undefined") {
         throw new SDKError(
           "Not initialized - make sure to await login() first before calling transfer()!"
         );
       }
-      const result = await this.iframeRpc.send({
-        method: "connext_transfer",
-        params: { recipient, amount, assetId: this.assetId },
+      const result = await this.channel.transfer({
+        recipient,
+        amount,
+        assetId: this.assetId,
       });
       console.log("transfer", result);
       return Object.keys(result).length === 0;
