@@ -34,7 +34,7 @@ function WithdrawModal({ emit }) {
       <>
         <form onSubmit={withdraw}>
           <h3>Please enter amount to withdraw and recipient.</h3>
-          <input required type="number" placeholder="Amount" ref={amountRef} />
+          <input required type="number" placeholder="Amount" step="any" ref={amountRef} />
           <input required placeholder="Ethereum address" ref={recipientRef} />
           <button type="submit">Withdraw</button>
         </form>
