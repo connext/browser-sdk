@@ -3,14 +3,13 @@ import ReactDOM from "react-dom";
 import EventEmitter from "eventemitter3";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
+import { providers } from "ethers";
 import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
   DEFAULT_IFRAME_SRC,
   DEFAULT_MAGIC_KEY,
-  DEFAULT_ASSET_ID,
-  DEFAULT_NETWORK,
   CONNEXT_OVERLAY_STYLE,
   CONNEXT_OVERLAY_ID,
   CONNEXT_IFRAME_ID,
@@ -18,7 +17,12 @@ import {
   WITHDRAW_SUCCESS_EVENT,
   LOGIN_SUCCESS_EVENT,
 } from "./constants";
-import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
+import {
+  IframeRpcConnection,
+  renderElement,
+  SDKError,
+  getSdkOptions,
+} from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 import { IConnextClient } from "@connext/types";
 
@@ -26,31 +30,33 @@ class ConnextSDK extends EventEmitter<string> {
   private modal: Modal | undefined;
   private iframeRpc: IframeRpcConnection | undefined;
   private assetId: string;
-  private network: string;
+  private ethProviderUrl: string;
+  private nodeUrl: string;
   private magic: Magic | undefined;
-  private pubId: string | undefined;
   private channel: IConnextClient | undefined;
 
-  constructor(opts?: ConnextSDKOptions) {
+  constructor(opts?: string | Partial<ConnextSDKOptions>) {
     super();
-    this.assetId = opts?.assetId || DEFAULT_ASSET_ID;
-    this.network = opts?.network || DEFAULT_NETWORK;
-    this.magic = new Magic(opts?.magicKey || DEFAULT_MAGIC_KEY, {
-      network: this.network as any,
+    const options = getSdkOptions(opts);
+    this.assetId = options.assetId;
+    this.ethProviderUrl = options.ethProviderUrl;
+    this.nodeUrl = options.nodeUrl;
+    this.magic = new Magic(DEFAULT_MAGIC_KEY, {
+      network: { rpcUrl: this.ethProviderUrl },
     });
     this.iframeRpc = new IframeRpcConnection({
-      src: opts?.iframeSrc || DEFAULT_IFRAME_SRC,
+      src: DEFAULT_IFRAME_SRC,
       id: CONNEXT_IFRAME_ID,
     });
   }
 
   get publicIdentifier(): string {
-    if (typeof this.pubId === "undefined") {
+    if (typeof this.channel?.publicIdentifier === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before getting publicIdentifier!"
       );
     }
-    return this.pubId;
+    return this.channel?.publicIdentifier;
   }
 
   public async login(): Promise<boolean> {
@@ -98,14 +104,15 @@ class ConnextSDK extends EventEmitter<string> {
     });
     console.log({ amount, recipient });
     try {
-      if (typeof this.iframeRpc === "undefined") {
+      if (typeof this.channel === "undefined") {
         throw new SDKError(
-          "Not initialized - make sure to await login() first before calling balance()!"
+          "Not initialized - make sure to await login() first before calling withdraw()!"
         );
       }
-      const result = await this.iframeRpc.send({
-        method: "connext_withdraw",
-        params: { recipient, amount, assetId: this.assetId },
+      const result = await this.channel.withdraw({
+        recipient,
+        amount,
+        assetId: this.assetId,
       });
       console.log(result);
     } catch (error) {
@@ -118,14 +125,14 @@ class ConnextSDK extends EventEmitter<string> {
   public async balance(): Promise<string> {
     if (
       typeof this.modal === "undefined" ||
-      typeof this.iframeRpc === "undefined"
+      typeof this.channel === "undefined"
     ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
-    const result = await this.iframeRpc.send({ method: "connext_balance" });
-    return result.balance;
+    const result = await this.channel.getFreeBalance(this.assetId);
+    return result[this.channel.signerAddress].toString();
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
@@ -141,23 +148,22 @@ class ConnextSDK extends EventEmitter<string> {
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
     if (
       typeof this.modal === "undefined" ||
-      typeof this.iframeRpc === "undefined"
+      typeof this.channel === "undefined"
     ) {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
-    const result = await this.iframeRpc.send({
-      method: "connext_getTransactionHistory",
-    });
-    return result;
+    const result = await this.channel.getTransferHistory();
+    // TODO: parse transfer history to match ConnextTransaction interface
+    return result as any;
   }
 
   // ---------- Private ----------------------------------------------- //
 
   private async init() {
     if (this.modal) {
-      return;  // already initialized
+      return; // already initialized
     }
 
     if (typeof this.iframeRpc === "undefined") {
@@ -168,6 +174,7 @@ class ConnextSDK extends EventEmitter<string> {
     await this.waitForIframe();
 
     this.channel = await connext.connect({
+      ethProviderUrl: this.ethProviderUrl,
       channelProvider: new ChannelProvider(this.iframeRpc),
     });
   }
@@ -235,11 +242,14 @@ class ConnextSDK extends EventEmitter<string> {
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
-    const result = await this.iframeRpc.send({
+    await this.iframeRpc.send({
       method: "connext_authenticate",
-      params: { signature, network: this.network },
+      params: {
+        signature,
+        ethProviderUrl: this.ethProviderUrl,
+        nodeUrl: this.nodeUrl,
+      },
     });
-    this.pubId = result.publicIdentifier;
   }
 
   private async waitForIframe() {

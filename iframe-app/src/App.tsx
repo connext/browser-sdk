@@ -7,20 +7,26 @@ class App extends React.Component {
   private channel: IConnextClient | undefined;
   private parentOrigin: string | undefined;
 
-  async authenticate(signature: string, network = "rinkeby") {
+  async authenticate(params: {
+    signature: string;
+    ethProviderUrl: string;
+    nodeUrl: string;
+  }) {
     // use the entropy of the signature to generate a private key for this wallet
     // since the signature depends on the private key stored by Magic/Metamask, this is not forgeable by an adversary
-    const mnemonic = utils.entropyToMnemonic(utils.keccak256(signature));
+    const mnemonic = utils.entropyToMnemonic(utils.keccak256(params.signature));
     const signer = Wallet.fromMnemonic(mnemonic).privateKey;
-    this.channel = await connext.connect(network, { signer });
+    this.channel = await connext.connect({
+      signer,
+      ethProviderUrl: params.ethProviderUrl,
+      nodeUrl: params.nodeUrl,
+    });
     return this.channel.publicIdentifier;
   }
 
   async handleRequest(request: JsonRpcRequest) {
     if (request.method === "connext_authenticate") {
-      const publicIdentifier = await this.authenticate(
-        request.params.signature
-      );
+      const publicIdentifier = await this.authenticate(request.params);
       return { publicIdentifier };
     }
 
@@ -29,47 +35,6 @@ class App extends React.Component {
     }
 
     let result: any | undefined;
-    switch (request.method) {
-      case "connext_publicIdentifier":
-        result = { publicIdentifier: this.channel.publicIdentifier };
-        break;
-      case "connext_deposit":
-        result = {
-          txhash: (
-            await this.channel.deposit({
-              amount: utils.parseEther(request.params.amount).toString(),
-              assetId: request.params.assetId,
-            })
-          ).transaction.hash,
-        };
-        break;
-      case "connext_withdraw":
-        result = {
-          txhash: (
-            await this.channel.withdraw({
-              recipient: request.params.recipient,
-              amount: utils.parseEther(request.params.amount).toString(),
-              assetId: request.params.assetId,
-            })
-          ).transaction.hash,
-        };
-        break;
-      case "connext_balance":
-        result = {
-          balance: "",
-        };
-        break;
-      case "connext_transfer":
-        result = {
-          paymentId: "",
-        };
-        break;
-      case "connext_getTransactionHistory":
-        result = {
-          transactions: [],
-        };
-        break;
-    }
 
     if (request.method.startsWith("chan_")) {
       result = await this.channel.channelProvider.send(
