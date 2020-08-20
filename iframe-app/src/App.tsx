@@ -8,6 +8,8 @@ class App extends React.Component {
   private parentOrigin: string | undefined;
 
   async authenticate(signature: string, network = "rinkeby") {
+    // use the entropy of the signature to generate a private key for this wallet
+    // since the signature depends on the private key stored by Magic/Metamask, this is not forgeable by an adversary
     const mnemonic = utils.entropyToMnemonic(utils.keccak256(signature));
     const signer = Wallet.fromMnemonic(mnemonic).privateKey;
     this.channel = await connext.connect(network, { signer });
