@@ -8,19 +8,19 @@ export class IframeRpcConnection extends EventEmitter<string>
   implements IRpcConnection {
   public iframe: HTMLIFrameElement | undefined;
   public opts: IframeOptions;
+  public connected = false;
+  private subscribed = false;
 
   constructor(opts: IframeOptions) {
     super();
     this.opts = opts;
-    window.addEventListener("DOMContentLoaded", () => {
+    if (document.readyState === 'loading') {
+      window.addEventListener("DOMContentLoaded", () => {
+        this.open();
+      });
+    } else {
       this.open();
-    });
-  }
-
-  get connected() {
-    return (
-      typeof this.iframe !== "undefined" && this.iframe.contentWindow !== null
-    );
+    }
   }
 
   public send(payload: Partial<JsonRpcRequest>): Promise<any> {
@@ -52,7 +52,7 @@ export class IframeRpcConnection extends EventEmitter<string>
         }
       });
       this.iframe.contentWindow.postMessage(
-        JSON.stringify(payload),
+        JSON.stringify(request),
         this.iframe.src
       );
     });
@@ -61,6 +61,7 @@ export class IframeRpcConnection extends EventEmitter<string>
   public render(): Promise<void> {
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
+        this.connected = true;
         this.emit("connect");
         this.emit("open");
         resolve();
@@ -105,12 +106,18 @@ export class IframeRpcConnection extends EventEmitter<string>
   }
 
   public subscribe() {
-    window.addEventListener("message", (e) => this.handleIncomingMessages(e));
+    if (this.subscribed) {
+      return;
+    }
+    this.subscribed = true;
+    window.addEventListener("message", this.handleIncomingMessages.bind(this));
   }
 
   public unsubscribe() {
-    window.removeEventListener("message", (e) =>
-      this.handleIncomingMessages(e)
-    );
+    if (!this.subscribed) {
+      return;
+    }
+    this.subscribed = false;
+    window.removeEventListener("message", this.handleIncomingMessages.bind(this));
   }
 }

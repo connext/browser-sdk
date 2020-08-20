@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import EventEmitter from "eventemitter3";
 import { Magic } from "magic-sdk";
-// import { ChannelProvider } from "@connext/channel-provider";
-// import * as connext from "@connext/client";
+import { ChannelProvider } from "@connext/channel-provider";
+import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
@@ -20,7 +20,7 @@ import {
 } from "./constants";
 import { IframeRpcConnection, renderElement, SDKError } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
-// import { IConnextClient } from "@connext/types";
+import { IConnextClient } from "@connext/types";
 
 class ConnextSDK extends EventEmitter<string> {
   private modal: Modal | undefined;
@@ -29,7 +29,7 @@ class ConnextSDK extends EventEmitter<string> {
   private network: string;
   private magic: Magic | undefined;
   private pubId: string | undefined;
-  // private channel: IConnextClient | undefined;
+  private channel: IConnextClient | undefined;
 
   constructor(opts?: ConnextSDKOptions) {
     super();
@@ -157,20 +157,19 @@ class ConnextSDK extends EventEmitter<string> {
 
   private async init() {
     if (this.modal) {
-      return;
+      return;  // already initialized
     }
+
+    if (typeof this.iframeRpc === "undefined") {
+      throw new SDKError("Iframe Provider is undefined");
+    }
+
     await this.renderModal();
     await this.waitForIframe();
 
-    // if (typeof this.iframeRpc === "undefined") {
-    //   throw new SDKError("Iframe Provider is undefined");
-    // }
-
-    // this.channel = await connext.connect({
-    //   channelProvider: new ChannelProvider(this.iframeRpc),
-    // });
-
-    // mark this SDK as fully initialized
+    this.channel = await connext.connect({
+      channelProvider: new ChannelProvider(this.iframeRpc),
+    });
   }
 
   private isMagicLoggedIn() {
