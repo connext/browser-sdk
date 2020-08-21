@@ -14,7 +14,7 @@ export class IframeRpcConnection extends EventEmitter<string>
   constructor(opts: IframeOptions) {
     super();
     this.opts = opts;
-    if (document.readyState === 'loading') {
+    if (document.readyState === "loading") {
       window.addEventListener("DOMContentLoaded", () => {
         this.open();
       });
@@ -41,11 +41,11 @@ export class IframeRpcConnection extends EventEmitter<string>
         throw new Error("Missing payload method or invalid");
       }
       this.on(`${request.id}`, (response) => {
-        if (response.result) {
-          resolve(response.result);
+        if (response?.result) {
+          resolve(response?.result);
         } else {
-          if (response.error.message) {
-            reject(new Error(response.error.message));
+          if (response?.error?.message) {
+            reject(new Error(response?.error?.message));
           } else {
             reject(new Error(`Failed request for method: ${request.method}`));
           }
@@ -60,7 +60,7 @@ export class IframeRpcConnection extends EventEmitter<string>
 
   public render(): Promise<void> {
     if (this.iframe) {
-      return Promise.resolve();  // already rendered
+      return Promise.resolve(); // already rendered
     }
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
@@ -121,6 +121,9 @@ export class IframeRpcConnection extends EventEmitter<string>
       return;
     }
     this.subscribed = false;
-    window.removeEventListener("message", this.handleIncomingMessages.bind(this));
+    window.removeEventListener(
+      "message",
+      this.handleIncomingMessages.bind(this)
+    );
   }
 }
