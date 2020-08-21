@@ -1,31 +1,53 @@
-import React, { useRef } from "react";
-import { LOGIN_SUCCESS_EVENT } from "../constants";
+import React, { useState, useEffect } from "react";
 
-function LoginModal({ loginStage, emit }) {
-  const emailRef = useRef<HTMLInputElement>(null);
+function LoginModal({ sdkInstance, onLoginComplete }) {
+  const [email, setEmail] = useState("");
+  const [loginStage, setLoginStage] = useState("choose_user");
 
-  function loginUser(e: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    (async () => {
+      const isAlreadyLoggedIn = await sdkInstance.magic.user.isLoggedIn();
+      if (isAlreadyLoggedIn) {
+        setLoginStage("initializing_connext");
+        await sdkInstance.authenticateWithMagic(); // TODO: handle errors
+        setLoginStage("success");
+        onLoginComplete(false); // already logged in automatically
+      }
+    })();
+  }, []);
+
+  const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!e.currentTarget.checkValidity() || !emailRef || !emailRef.current) {
+    if (!e.currentTarget.checkValidity()) {
       console.log("Invalid email!");
       return;
     }
-    emit(LOGIN_SUCCESS_EVENT, { email: emailRef.current.value });
-  }
+
+    try {
+      setLoginStage("authenticating");
+      await sdkInstance.magic.auth.loginWithMagicLink({ email, showUI: false });
+    } catch (error) {
+      setLoginStage("failure");
+      throw error;
+    }
+
+    setLoginStage("initializing_connext");
+    await sdkInstance.authenticateWithMagic(); // TODO: handle errors
+    setLoginStage("success");
+    onLoginComplete(true); // new login
+  };
 
   return (
     <div className="flex-column">
-      {loginStage ? (
-        <>
-          <h3>
-            {loginStage === "pending"
-              ? "Waiting for email confirmation..."
-              : loginStage === "success"
-              ? "Login Successful!"
-              : "Failed to Login. Try again!"}
-          </h3>
-        </>
-      ) : (
+      {loginStage === "authenticating" ? (
+        <h3>Check your email for a login link!</h3>
+      ) : loginStage === "initializing_connext" ? (
+        <h3>Setting up Connext...</h3>
+      ) : loginStage === "success" ? (
+        <h3>Login successful!</h3>
+      ) : loginStage === "failure" ? (
+        <h3>Login failed - try again!</h3>
+      ) : loginStage === "choose_user" ? (
         <>
           <form onSubmit={loginUser}>
             <h3>Please enter your email to login.</h3>
@@ -33,12 +55,13 @@ function LoginModal({ loginStage, emit }) {
               required
               type="email"
               placeholder="Enter your email"
-              ref={emailRef}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <button type="submit">Send me a login link!</button>
           </form>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

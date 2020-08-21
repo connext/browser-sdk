@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import QRCode from "react-qr-code";
 
-function DepositModal() {
-  const [showQR, setShowQR] = useState(true);
+function DepositModal({ sdkInstance, onDepositComplete }) {
+  const [showQR, setShowQR] = useState(false);
   const depositAddress = "some eth address";
   return (
     <div className="flex-column">
