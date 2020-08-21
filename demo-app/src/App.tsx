@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import { BigNumber } from "ethers";
 import ConnextSDK from "@connext/browser-sdk";
 
 function App() {
@@ -7,14 +8,14 @@ function App() {
   const [errored, setErrored] = useState(false);
 
   const recipientIdentifier = "indra987zxy...";
-  const amount = 0.01;
+  const amount = BigNumber.from(5*10e-18);
 
   const connext = new ConnextSDK();
 
   const handleClick = async () => {
     await connext.login();
-    const currentBalance = await connext.balance();
-    if (currentBalance < amount) {
+    const currentBalance = await connext.balance() as BigNumber;
+    if (currentBalance.lt(amount)) {
       console.log("Balance too low! Please fund your account.");
       try {
         await connext.deposit();
