@@ -1,44 +1,47 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 
 import { isValidAddress } from "../helpers";
-import { WITHDRAW_SUCCESS_EVENT } from "../constants";
 
-function WithdrawModal({ emit }) {
-  const recipientRef = useRef<HTMLInputElement>(null);
-  const amountRef = useRef<HTMLInputElement>(null);
+function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
 
-  function withdraw(e: React.FormEvent<HTMLFormElement>) {
+  const withdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (
-      !recipientRef ||
-      !recipientRef.current ||
-      isValidAddress(recipientRef.current.value)
-    ) {
+    if (isValidAddress(recipient)) {
       console.log("Invalid address!");
       return;
     }
 
-    if (!e.currentTarget.checkValidity() || !amountRef || !amountRef.current) {
+    if (!e.currentTarget.checkValidity()) {
       console.log("Invalid amount!");
       return;
     }
 
-    emit(WITHDRAW_SUCCESS_EVENT, {
-      amount: amountRef.current.value,
-      recipient: recipientRef.current.value,
-    });
+    console.log('WITHDRAW', { amount, recipient });
+    try {
+      const result = await sdkInstance.channel.withdraw({
+        recipient,
+        amount,
+        assetId: sdkInstance.assetId
+      });
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+    onWithdrawComplete(true);
   }
+  // TODO: cancel button
   return (
     <div className="flex-column">
-      <>
-        <form onSubmit={withdraw}>
-          <h3>Please enter amount to withdraw and recipient.</h3>
-          <input required type="number" placeholder="Amount" ref={amountRef} />
-          <input required placeholder="Ethereum address" ref={recipientRef} />
-          <button type="submit">Withdraw</button>
-        </form>
-      </>
+      <form onSubmit={withdraw}>
+        <h3>Please enter amount to withdraw and recipient.</h3>
+        <input required type="number" placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} />
+        <input required placeholder="Ethereum address" value={recipient} onChange={e => setRecipient(e.target.value)} />
+        <button type="submit">Withdraw</button>
+      </form>
     </div>
   );
 }

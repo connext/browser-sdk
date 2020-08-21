@@ -3,27 +3,34 @@ import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
 import LoginModal from "./LoginModal";
 
-interface IProp {
-  emit: (event: string, ...args: any[]) => boolean;
+interface IProps {
+  sdkInstance: any;
 }
 
 interface IState {
   mode: string;
-  loginStage: string | null;
-  publicAddress: string;
-  transferRecipient: string | null;
-  transferAmount: string;
+
+  // login fields
+  onLoginComplete?: () => any;
+  loginKey: boolean;
+
+  // deposit fields
+  onDepositComplete?: () => any;
+  depositKey: boolean;
+
+  // withdraw fields
+  onWithdrawComplete?: () => any;
+  withdrawKey: boolean;
 }
 
-class Modal extends React.Component<IProp, IState> {
+class Modal extends React.Component<IProps, IState> {
   constructor(props: any) {
     super(props);
     this.state = {
       mode: "",
-      loginStage: null,
-      publicAddress: "",
-      transferRecipient: null,
-      transferAmount: "1.00",
+      loginKey: false,
+      depositKey: false,
+      withdrawKey: false,
     };
   }
 
@@ -32,14 +39,24 @@ class Modal extends React.Component<IProp, IState> {
       case "LOGIN":
         return (
           <LoginModal
-            loginStage={this.state.loginStage}
-            emit={this.props.emit}
-          />
+            key={this.state.loginKey.toString()}
+            sdkInstance={this.props.sdkInstance}
+            onLoginComplete={this.state.onLoginComplete} />
         );
       case "DEPOSIT":
-        return <DepositModal />;
+        return (
+          <DepositModal
+            key={this.state.depositKey.toString()}
+            sdkInstance={this.props.sdkInstance}
+            onDepositComplete={this.state.onDepositComplete} />
+        );
       case "WITHDRAW":
-        return <WithdrawModal emit={this.props.emit} />;
+        return (
+          <WithdrawModal
+            key={this.state.withdrawKey.toString()}
+            sdkInstance={this.props.sdkInstance}
+            onWithdrawComplete={this.state.onWithdrawComplete} />
+        );
       default:
         return null;
     }
@@ -49,23 +66,21 @@ class Modal extends React.Component<IProp, IState> {
     return <div id="connext-overlay-modal">{this.renderView()}</div>;
   }
 
-  showLoginUI() {
-    this.setState({ mode: "LOGIN" });
+  async startLogin() {
+    return new Promise<boolean>(resolve => {
+      this.setState({ mode: "LOGIN", onLoginComplete: resolve, loginKey: !this.state.loginKey });
+    });
   }
 
-  showDepositUI() {
-    this.setState({ mode: "DEPOSIT" });
+  async startDeposit() {
+    return new Promise<boolean>(resolve => {
+      this.setState({ mode: "DEPOSIT", onDepositComplete: resolve, depositKey: !this.state.depositKey });
+    });
   }
 
-  showWithdrawUI() {
-    this.setState({ mode: "WITHDRAW" });
-  }
-
-  showTransferUI(recipient: string, amount: string) {
-    this.setState({
-      mode: "TRANSFER",
-      transferRecipient: recipient,
-      transferAmount: amount,
+  async startWithdraw() {
+    return new Promise<boolean>(resolve => {
+      this.setState({ mode: "WITHDRAW", onWithdrawComplete: resolve, withdrawKey: !this.state.withdrawKey });
     });
   }
 }

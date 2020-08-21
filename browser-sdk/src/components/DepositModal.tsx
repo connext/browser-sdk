@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import QRCode from "react-qr-code";
 
-function DepositModal() {
+function DepositModal({ sdkInstance, onDepositComplete }) {
   const [showQR, setShowQR] = useState(false);
   const depositAddress = "some eth address";
   return (
