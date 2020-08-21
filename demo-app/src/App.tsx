@@ -7,14 +7,14 @@ function App() {
   const [tipped, setTipped] = useState(false);
   const [errored, setErrored] = useState(false);
 
-  const recipientIdentifier = "indra987zxy...";
-  const amount = BigNumber.from(5*10e-18);
+  const recipientIdentifier = "indra6YALGSPQxrKKEKkwGKW5DUCUqdWY7FofdENXjNUg3bFXpbRAJv";
+  const amount = BigNumber.from(5);
 
   const connext = new ConnextSDK();
 
   const handleClick = async () => {
     await connext.login();
-    const currentBalance = await connext.balance() as BigNumber;
+    const currentBalance = BigNumber.from(await connext.balance());
     if (currentBalance.lt(amount)) {
       console.log("Balance too low! Please fund your account.");
       try {
