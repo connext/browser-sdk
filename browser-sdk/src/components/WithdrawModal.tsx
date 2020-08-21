@@ -41,7 +41,7 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
     <div className="flex-column">
       <form onSubmit={withdraw}>
         <h3>Please enter amount to withdraw and recipient.</h3>
-        <input required type="number" placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} />
+        <input required type="number" placeholder="Amount" value={amount} step="any"  onChange={e => setAmount(e.target.value)} />
         <input required ref={recipientRef} placeholder="Ethereum address" value={recipient} onChange={e => setRecipient(e.target.value)} />
         <button type="submit">Withdraw</button>
       </form>
