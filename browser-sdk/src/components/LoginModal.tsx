@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 
 function LoginModal({ sdkInstance, onLoginComplete }) {
   const [email, setEmail] = useState('');
-  const [loginStage, setLoginStage] = useState('authenticating');
+  const [loginStage, setLoginStage] = useState('choose_user');
 
   useEffect(() => {
     (async () => {
-      const isAlreadyLoggedIn = sdkInstance.magic.user.isLoggedIn();
+      const isAlreadyLoggedIn = await sdkInstance.magic.user.isLoggedIn();
       if (isAlreadyLoggedIn) {
         setLoginStage('initializing_connext');
         await sdkInstance.authenticateWithMagic(); // TODO: handle errors
         setLoginStage('success');
         onLoginComplete(false);  // already logged in automatically
-      }
+      } 
     })();
   }, []);
 
@@ -40,7 +40,7 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
   return (
     <div className="flex-column">
       {
-        loginStage === 'authenticating' ? <h3>Logging in...</h3> :
+        loginStage === 'authenticating' ? <h3>Check your email for a login link!</h3> :
         loginStage === 'initializing_connext' ? <h3>Setting up Connext...</h3> :
         loginStage === 'success' ? <h3>Login successful!</h3> :
         loginStage === 'failure' ? <h3>Login failed - try again!</h3> :
