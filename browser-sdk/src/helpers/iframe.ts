@@ -3,6 +3,7 @@ import { JsonRpcRequest, IRpcConnection } from "@connext/types";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
+import { ChannelProvider } from "@connext/channel-provider";
 
 export class IframeRpcConnection extends EventEmitter<string>
   implements IRpcConnection {
@@ -126,4 +127,21 @@ export class IframeRpcConnection extends EventEmitter<string>
       this.handleIncomingMessages.bind(this)
     );
   }
+}
+
+export class IframeChannelProvider extends ChannelProvider {
+  constructor(opts: IframeOptions) {
+    super(new IframeRpcConnection(opts));
+  }
+  get isIframe(): boolean {
+    return true;
+  }
+}
+
+export function isIframe(
+  channelProvider: ChannelProvider | IframeChannelProvider
+): channelProvider is IframeChannelProvider {
+  return (
+    typeof (channelProvider as IframeChannelProvider).isIframe === "undefined"
+  );
 }
