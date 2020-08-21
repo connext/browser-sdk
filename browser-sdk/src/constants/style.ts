@@ -9,6 +9,7 @@ export const CONNEXT_OVERLAY_STYLE = `
       z-index: 999;
       pointer-events: none;
       font-family: Fira Sans,Helvetica Neue,Apple SD Gothic Neo,Malgun Gothic,Segoe UI,sans-serif;
+      font-size: 16px;
   }
   #connext-overlay * not(svg) {
       /* reset all CSS styles for elements inside the overlay, as a way to "sandbox" the overlay UI from the parent page without using an iframe */
@@ -23,7 +24,7 @@ export const CONNEXT_OVERLAY_STYLE = `
     background: white;
     width: 16em;
     padding: 2em;
-    border-radius: 1em;
+    border-radius: 0.5em;
   }
 
   #connext-overlay #connext-overlay-modal .flex-column {
@@ -47,7 +48,8 @@ export const CONNEXT_OVERLAY_STYLE = `
     font-size: 1.25em;
     border: none;
     border-radius: 0.25em;
-    padding: 0.25em;
+    padding: 0.25em 1em;
+    min-width: 9em;
     margin: 0.5em 0.5em 0;
   }
 
