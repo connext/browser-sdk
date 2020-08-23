@@ -2,8 +2,8 @@
   "name": "connext-browser-sdk",
   "version": "1.0.0",
   "description": "Browser SDK for Connext",
-  "main": "./dist/connext.js",
-  "types": "./dist/connext.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
     "build-and-watch": "rollup -c -w"
