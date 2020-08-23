@@ -1,7 +1,10 @@
+import { ChannelProvider } from "@connext/channel-provider";
+
 export interface ConnextSDKOptions {
   assetId: string;
   nodeUrl: string;
   ethProviderUrl: string;
+  channelProvider?: ChannelProvider;
 }
 
 export interface ConnextTransaction {

@@ -16,11 +16,12 @@ import {
   MULTISIG_BALANCE_PRE_DEPOSIT,
 } from "./constants";
 import {
-  IframeRpcConnection,
+  isIframe,
   renderElement,
   SDKError,
   getSdkOptions,
   getFreeBalanceOnChain,
+  IframeChannelProvider,
 } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 import { IConnextClient } from "@connext/types";
@@ -29,8 +30,8 @@ class ConnextSDK {
   private assetId: string;
   private ethProviderUrl: string;
   private nodeUrl: string;
-  private magic: Magic;
-  private iframeRpc: IframeRpcConnection;
+  private magic: Magic | undefined;
+  private channelProvider: ChannelProvider | IframeChannelProvider;
   private channel: IConnextClient | undefined;
   private modal: Modal | undefined;
 
@@ -42,10 +43,12 @@ class ConnextSDK {
     this.magic = new Magic(DEFAULT_MAGIC_KEY, {
       network: { rpcUrl: this.ethProviderUrl },
     });
-    this.iframeRpc = new IframeRpcConnection({
-      src: DEFAULT_IFRAME_SRC,
-      id: CONNEXT_IFRAME_ID,
-    });
+    this.channelProvider =
+      options.channelProvider ||
+      new IframeChannelProvider({
+        src: DEFAULT_IFRAME_SRC,
+        id: CONNEXT_IFRAME_ID,
+      });
     this.checkDepositSubscription();
   }
 
@@ -63,7 +66,12 @@ class ConnextSDK {
     if (typeof this.modal === "undefined") {
       throw new SDKError("Modal has not been initialized");
     }
-    return await this.modal.startLogin();
+    if (isIframe(this.channelProvider)) {
+      await this.modal.startLogin();
+    } else {
+      await this.initChannel();
+    }
+    return true;
   }
 
   public async deposit(): Promise<boolean> {
@@ -134,13 +142,18 @@ class ConnextSDK {
   }
 
   async authenticateWithMagic() {
+    if (typeof this.magic === "undefined") {
+      throw new SDKError("Magic is undefined");
+    }
     const accounts = await this.magic.rpcProvider.send("eth_accounts");
     const signature = await this.magic.rpcProvider.send("personal_sign", [
       AUTHENTICATION_MESSAGE,
       accounts[0],
     ]);
 
-    await this.iframeRpc.send({
+    await this.channelProvider.connection.send({
+      id: 1,
+      jsonrpc: "2.0",
       method: "connext_authenticate",
       params: {
         userSecretEntropy: signature,
@@ -148,10 +161,7 @@ class ConnextSDK {
         nodeUrl: this.nodeUrl,
       },
     });
-    this.channel = await connext.connect({
-      ethProviderUrl: this.ethProviderUrl,
-      channelProvider: new ChannelProvider(this.iframeRpc),
-    });
+    await this.initChannel();
   }
 
   // ---------- Private ----------------------------------------------- //
@@ -163,14 +173,21 @@ class ConnextSDK {
 
     // wait for this.iframeRpc to be fully initialized
     await new Promise((resolve) => {
-      if (this.iframeRpc.connected) {
+      if (this.channelProvider.connection.connected) {
         resolve();
       } else {
-        this.iframeRpc.once("connect", resolve);
+        this.channelProvider.connection.once("connect", resolve);
       }
     });
 
     await this.renderModal();
+  }
+
+  private async initChannel() {
+    this.channel = await connext.connect({
+      ethProviderUrl: this.ethProviderUrl,
+      channelProvider: this.channelProvider,
+    });
   }
 
   private async getOnChainBalance() {
