@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 function LoginModal({ sdkInstance, onLoginComplete }) {
   const [email, setEmail] = useState("");
-  const [loginStage, setLoginStage] = useState("choose_user");
+  const [loginStage, setLoginStage] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -13,6 +13,8 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
         setLoginStage("success");
         onLoginComplete(false); // already logged in automatically
         sdkInstance.checkDepositSubscription();
+      } else {
+        setLoginStage("choose_user");
       }
     })();
   }, []);
@@ -63,7 +65,9 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
             <button type="submit">Send me a login link!</button>
           </form>
         </>
-      ) : null}
+      ) : (
+        <h3>Connext</h3>
+      )}
     </div>
   );
 }
