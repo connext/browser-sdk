@@ -1,6 +1,6 @@
 {
   "name": "connext-browser-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Browser SDK for Connext",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
