@@ -22,12 +22,12 @@ export function payloadId(): number {
   return date + extra;
 }
 
-export const removeUndefinedFields = <T>(obj: T): T => {
-  Object.keys(obj).forEach(
-    (key) => typeof obj[key] === "undefined" && delete obj[key]
-  );
-  return obj;
-};
+// export const removeUndefinedFields = <T>(obj: T): T => {
+//   Object.keys(obj).forEach(
+//     (key) => typeof obj[key] === "undefined" && delete obj[key]
+//   );
+//   return obj;
+// };
 
 export function getNetworkName(option: string): string {
   if (CONFIG_OPTIONS.networks.includes(option)) {
@@ -92,6 +92,6 @@ export const getSdkOptions = (
   }
   return {
     ...options,
-    ...removeUndefinedFields(overrideOpts),
+    ...overrideOpts,
   };
 };
