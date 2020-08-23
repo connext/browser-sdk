@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import { BigNumber } from "ethers";
-import ConnextSDK from "@connext/browser-sdk";
+import ConnextSDK from "connext-browser-sdk";
 
 function App() {
   const [tipped, setTipped] = useState(false);

@@ -1,5 +1,5 @@
 {
-  "name": "@connext/browser-sdk",
+  "name": "connext-browser-sdk",
   "version": "1.0.0",
   "description": "Browser SDK for Connext",
   "main": "./dist/connext.js",
