@@ -83,10 +83,7 @@ class ConnextSDK {
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    this.channel.requestDepositRights({ assetId: this.assetId });
-    this.modal.startDeposit();
-    await this.subscribeToDeposit();
-    return false;
+    return await this.modal.startDeposit();
   }
 
   public async withdraw(): Promise<boolean> {

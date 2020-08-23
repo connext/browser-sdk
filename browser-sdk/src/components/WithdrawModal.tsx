@@ -48,11 +48,11 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
   // TODO: cancel button
   return (
     <div className="flex-column">
-      {withdrawStage == "success" ? (
+      {withdrawStage === "success" ? (
         <h3>Withdraw successful!</h3>
-      ) : withdrawStage == "failure" ? (
+      ) : withdrawStage === "failure" ? (
         <h3>Withdraw failed - try again!</h3>
-      ) : withdrawStage == "choose_recipient" ? (
+      ) : withdrawStage === "choose_recipient" ? (
         <form onSubmit={withdraw}>
           <h3>Please enter amount to withdraw and recipient.</h3>
           <input

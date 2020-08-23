@@ -12,6 +12,7 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
         await sdkInstance.authenticateWithMagic(); // TODO: handle errors
         setLoginStage("success");
         onLoginComplete(false); // already logged in automatically
+        sdkInstance.checkDepositSubscription();
       }
     })();
   }, []);
@@ -35,6 +36,7 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
     await sdkInstance.authenticateWithMagic(); // TODO: handle errors
     setLoginStage("success");
     onLoginComplete(true); // new login
+    sdkInstance.checkDepositSubscription();
   };
 
   return (
