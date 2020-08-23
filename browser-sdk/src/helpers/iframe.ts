@@ -63,6 +63,9 @@ export class IframeRpcConnection extends EventEmitter<string>
     if (this.iframe) {
       return Promise.resolve(); // already rendered
     }
+    if (window.document.getElementById(this.opts.id)) {
+      return Promise.resolve(); // already exists
+    }
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
         this.connected = true;

@@ -7,8 +7,6 @@ import * as connext from "@connext/client";
 
 import Modal from "./components/Modal";
 import {
-  DEFAULT_IFRAME_SRC,
-  DEFAULT_MAGIC_KEY,
   CONNEXT_OVERLAY_STYLE,
   CONNEXT_OVERLAY_ID,
   CONNEXT_IFRAME_ID,
