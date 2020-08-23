@@ -49,7 +49,6 @@ class ConnextSDK {
         src: DEFAULT_IFRAME_SRC,
         id: CONNEXT_IFRAME_ID,
       });
-    this.checkDepositSubscription();
   }
 
   get publicIdentifier(): string {
