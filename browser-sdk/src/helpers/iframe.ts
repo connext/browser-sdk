@@ -142,6 +142,6 @@ export function isIframe(
   channelProvider: ChannelProvider | IframeChannelProvider
 ): channelProvider is IframeChannelProvider {
   return (
-    typeof (channelProvider as IframeChannelProvider).isIframe === "undefined"
+    typeof (channelProvider as IframeChannelProvider).isIframe !== "undefined"
   );
 }
