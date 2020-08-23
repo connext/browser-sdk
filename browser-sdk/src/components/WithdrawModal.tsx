@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { BigNumber } from "ethers";
 
 import { isValidAddress } from "../helpers";
 
@@ -27,12 +28,12 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
       console.log("Invalid amount!");
       return;
     }
-
-    console.log("WITHDRAW", { amount, recipient });
+    const bigAmount = BigNumber.from(amount);
+    console.log("WITHDRAW", { bigAmount, recipient });
     try {
       const result = await sdkInstance.channel.withdraw({
         recipient,
-        amount,
+        amount: bigAmount,
         assetId: sdkInstance.assetId,
       });
       console.log(result);
