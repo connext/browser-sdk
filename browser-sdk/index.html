@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <script type="text/javascript" src="dist/connext.js"></script>
     <script>
-      window.connext = new window.ConnextSDK();
+      window.connext = new window.ConnextSDK("rinkeby", {
+        iframeSrc: "http://localhost:3030",
+      });
       function login() {
         connext.login().then((x) => console.log("LOGIN", x));
       }

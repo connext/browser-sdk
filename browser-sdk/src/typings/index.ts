@@ -4,6 +4,8 @@ export interface ConnextSDKOptions {
   assetId: string;
   nodeUrl: string;
   ethProviderUrl: string;
+  iframeSrc: string;
+  magicKey: string;
   channelProvider?: ChannelProvider;
 }
 

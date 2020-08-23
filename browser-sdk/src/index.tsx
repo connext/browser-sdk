@@ -35,18 +35,21 @@ class ConnextSDK {
   private channel: IConnextClient | undefined;
   private modal: Modal | undefined;
 
-  constructor(opts?: string | Partial<ConnextSDKOptions>) {
-    const options = getSdkOptions(opts);
+  constructor(
+    opts?: string | Partial<ConnextSDKOptions>,
+    overrideOpts?: Partial<ConnextSDKOptions>
+  ) {
+    const options = getSdkOptions(opts, overrideOpts);
     this.assetId = options.assetId;
     this.ethProviderUrl = options.ethProviderUrl;
     this.nodeUrl = options.nodeUrl;
-    this.magic = new Magic(DEFAULT_MAGIC_KEY, {
+    this.magic = new Magic(options.magicKey, {
       network: { rpcUrl: this.ethProviderUrl },
     });
     this.channelProvider =
       options.channelProvider ||
       new IframeChannelProvider({
-        src: DEFAULT_IFRAME_SRC,
+        src: options.iframeSrc,
         id: CONNEXT_IFRAME_ID,
       });
   }

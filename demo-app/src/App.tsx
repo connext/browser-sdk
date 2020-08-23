@@ -7,10 +7,13 @@ function App() {
   const [tipped, setTipped] = useState(false);
   const [errored, setErrored] = useState(false);
 
-  const recipientIdentifier = "indra6YALGSPQxrKKEKkwGKW5DUCUqdWY7FofdENXjNUg3bFXpbRAJv";
+  const recipientIdentifier =
+    "indra6YALGSPQxrKKEKkwGKW5DUCUqdWY7FofdENXjNUg3bFXpbRAJv";
   const amount = BigNumber.from(5);
 
-  const connext = new ConnextSDK();
+  const connext = new ConnextSDK("rinkeby", {
+    iframeSrc: "http://localhost:3030",
+  });
 
   const handleClick = async () => {
     await connext.login();
@@ -40,7 +43,13 @@ function App() {
         <h4>(-⌣-) Welcome to Loft Rad</h4>
         <h1>Golden</h1>
         <h3>Tom Doolie</h3>
-        <button onClick={handleClick}>{tipped ? "Thanks for the tip!" : errored ? "Error! Please try again" : "Tip"}</button>
+        <button onClick={handleClick}>
+          {tipped
+            ? "Thanks for the tip!"
+            : errored
+            ? "Error! Please try again"
+            : "Tip"}
+        </button>
       </div>
     </div>
   );

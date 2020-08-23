@@ -3,6 +3,8 @@ import {
   DEFAULT_ASSET_ID,
   DEFAULT_NETWORK,
   CONFIG_OPTIONS,
+  DEFAULT_IFRAME_SRC,
+  DEFAULT_MAGIC_KEY,
 } from "../constants";
 
 export function renderElement(name: string, attr: any, target) {
@@ -19,6 +21,13 @@ export function payloadId(): number {
   const extra = Math.floor(Math.random() * Math.pow(10, 3));
   return date + extra;
 }
+
+export const removeUndefinedFields = <T>(obj: T): T => {
+  Object.keys(obj).forEach(
+    (key) => typeof obj[key] === "undefined" && delete obj[key]
+  );
+  return obj;
+};
 
 export function getNetworkName(option: string): string {
   if (CONFIG_OPTIONS.networks.includes(option)) {
@@ -61,10 +70,13 @@ export const getUrlOptions = (
 };
 
 export const getSdkOptions = (
-  opts?: string | Partial<ConnextSDKOptions>
+  opts?: string | Partial<ConnextSDKOptions>,
+  overrideOpts?: Partial<ConnextSDKOptions>
 ): ConnextSDKOptions => {
   let options: ConnextSDKOptions = {
     assetId: DEFAULT_ASSET_ID,
+    iframeSrc: DEFAULT_IFRAME_SRC,
+    magicKey: DEFAULT_MAGIC_KEY,
     ...getUrlOptions(DEFAULT_NETWORK),
   };
   if (typeof opts === "string") {
@@ -78,5 +90,8 @@ export const getSdkOptions = (
       ...opts,
     };
   }
-  return options;
+  return {
+    ...options,
+    ...removeUndefinedFields(overrideOpts),
+  };
 };
