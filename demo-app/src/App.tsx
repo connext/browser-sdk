@@ -8,7 +8,7 @@ function App() {
   const [errored, setErrored] = useState(false);
 
   const recipientIdentifier =
-    "indra6YALGSPQxrKKEKkwGKW5DUCUqdWY7FofdENXjNUg3bFXpbRAJv";
+    "indra6WYYHjQsgU7KRWHVb7NQL5NvYwoMibtAUNM7QwmNJqXacRbvZ7";
   const amount = BigNumber.from(5);
 
   const connext = new ConnextSDK("rinkeby", {
