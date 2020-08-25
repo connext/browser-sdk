@@ -28,7 +28,8 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
       console.log("Invalid amount!");
       return;
     }
-    const bigAmount = BigNumber.from(amount);
+    const scalingFactor = BigNumber.from(10^18);
+    const bigAmount = BigNumber.from(amount).mul(scalingFactor);
     console.log("WITHDRAW", { bigAmount, recipient });
     try {
       const result = await sdkInstance.channel.withdraw({
@@ -59,7 +60,7 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
           <input
             required
             type="number"
-            placeholder="Amount"
+            placeholder="Amount [ETH]"
             value={amount}
             step="any"
             onChange={(e) => setAmount(e.target.value)}
