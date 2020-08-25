@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import { BigNumber } from "ethers";
-import ConnextSDK from "connext-browser-sdk";
+import ConnextSDK from "connext";
 
 function App() {
   const [tipped, setTipped] = useState(false);
@@ -15,9 +15,12 @@ function App() {
     iframeSrc: "http://localhost:3030",
   });
 
-  const handleClick = async () => {
+  const tip = async () => {
+    console.log("[tip]", "connext.login()", "BEFORE");
     await connext.login();
+    console.log("[tip]", "connext.login()", "AFTER");
     const currentBalance = BigNumber.from(await connext.balance());
+    console.log("[tip]", "currentBalance", "currentBalance");
     if (currentBalance.lt(amount)) {
       console.log("Balance too low! Please fund your account.");
       try {
@@ -28,7 +31,7 @@ function App() {
       }
     } else {
       try {
-        await connext.transfer(recipientIdentifier, amount);
+        await connext.transfer(recipientIdentifier, amount.toString());
         setTipped(true);
         setErrored(false);
       } catch (error) {
@@ -43,7 +46,7 @@ function App() {
         <h4>(-⌣-) Welcome to Loft Rad</h4>
         <h1>Golden</h1>
         <h3>Tom Doolie</h3>
-        <button onClick={handleClick}>
+        <button onClick={tip}>
           {tipped
             ? "Thanks for the tip!"
             : errored
