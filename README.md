@@ -20,7 +20,7 @@ The SDK supports the following features:
 - [Quick Start](https://github.com/connext/browser-sdk/blob/master/README.md#quick-start)
 - [Advanced Configuration](https://github.com/connext/browser-sdk/blob/master/README.md#advanced-configuration)
 - [API Reference](https://github.com/connext/browser-sdk/blob/master/README.md#api-reference)
-- Contributing
+- [Development](https://github.com/connext/browser-sdk/blob/master/README.md#development)
 
 ## Installation
 
@@ -101,7 +101,7 @@ const connext = new ConnextSDK({
 |       `transfer`        |      `await connext.transfer(id, amount);`      |            Sends amount to the specified public identifier             |                                                  - String: public identifier of recipient - String: amount to send                                                  |                              |
 | `getTransactionHistory` |    `await connext.getTransactionHistory();`     |                Gets a history of previous transactions                 |                                                                                                                                                                     |            //TODO            |
 
-### Development
+## Development
 
 To work on the Connext Browser SDK itself:
 
