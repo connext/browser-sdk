@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { BigNumber } from "ethers";
+import React, { useState } from "react";
+import { toWad } from "@connext/utils";
 
 import { isValidAddress } from "../helpers";
 
@@ -15,7 +15,7 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
     ) as HTMLInputElement;
 
     if (!isValidAddress(recipient)) {
-      console.log("Invalid address!");
+      console.error("Invalid address!");
       recipientRef?.setCustomValidity("Please enter a valid address");
       recipientRef?.reportValidity();
       return;
@@ -25,21 +25,17 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
     }
 
     if (!e.currentTarget.checkValidity()) {
-      console.log("Invalid amount!");
+      console.error("Invalid amount!");
       return;
     }
-    const scalingFactor = BigNumber.from(10^18);
-    const bigAmount = BigNumber.from(amount).mul(scalingFactor);
-    console.log("WITHDRAW", { bigAmount, recipient });
     try {
-      const result = await sdkInstance.channel.withdraw({
+      await sdkInstance.channel.withdraw({
         recipient,
-        amount: bigAmount,
+        amount: toWad(amount),
         assetId: sdkInstance.assetId,
       });
-      console.log(result);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setWithdrawStage("failure");
       onWithdrawComplete(false);
       throw error;

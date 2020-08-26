@@ -49,3 +49,7 @@ await connext.transfer(recipientIdentifier, amount);
 // withdraw
 await connext.withdraw();
 ```
+
+## Documentation
+
+For more documentation, please check the [Github repo for Connext SDK](https://github.com/connext/browser-sdk)

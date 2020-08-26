@@ -1,4 +1,8 @@
-import { JsonRpcRequest, ChannelMethods, IChannelProvider } from "@connext/types";
+import {
+  JsonRpcRequest,
+  ChannelMethods,
+  IChannelProvider,
+} from "@connext/types";
 import { getLocalStore } from "@connext/store";
 import { ChannelSigner, ConsoleLogger, getChainId } from "@connext/utils";
 import { NodeApiClient } from "@connext/client/dist/node";
@@ -12,17 +16,28 @@ export default class ConnextManager {
 
   constructor() {
     this.parentOrigin = new URL(document.referrer).origin;
-    window.addEventListener("message", (e) => this.handleIncomingMessage(e), true);
-    if (document.readyState === 'loading') {
+    window.addEventListener(
+      "message",
+      (e) => this.handleIncomingMessage(e),
+      true
+    );
+    if (document.readyState === "loading") {
       window.addEventListener("DOMContentLoaded", () => {
-        window.parent.postMessage("event:iframe-initialized", this.parentOrigin as string);
+        window.parent.postMessage(
+          "event:iframe-initialized",
+          this.parentOrigin as string
+        );
       });
     } else {
       window.parent.postMessage("event:iframe-initialized", this.parentOrigin);
     }
   }
 
-  private async initializeChannelProvider(ethProviderUrl: string, nodeUrl: string, signature: string): Promise<IChannelProvider> {
+  private async initializeChannelProvider(
+    ethProviderUrl: string,
+    nodeUrl: string,
+    signature: string
+  ): Promise<IChannelProvider> {
     // use the entropy of the signature to generate a private key for this wallet
     // since the signature depends on the private key stored by Magic/Metamask, this is not forgeable by an adversary
     const mnemonic = utils.entropyToMnemonic(utils.keccak256(signature));
@@ -40,8 +55,8 @@ export default class ConnextManager {
       nodeUrl: nodeUrl,
       signer: new ChannelSigner(this.privateKey, ethProvider),
     });
-    if (typeof node.channelProvider === 'undefined') {
-      throw new Error('Node ChannelProvider not present!');
+    if (typeof node.channelProvider === "undefined") {
+      throw new Error("Node ChannelProvider not present!");
     }
     return node.channelProvider;
   }
@@ -52,26 +67,30 @@ export default class ConnextManager {
     let response: any;
     try {
       const result = await this.handleRequest(request);
-      response = {id: request.id, result};
+      response = { id: request.id, result };
     } catch (e) {
-      response = {id: request.id, error: {message: e.message}};
+      response = { id: request.id, error: { message: e.message } };
     }
     window.parent.postMessage(JSON.stringify(response), this.parentOrigin);
   }
 
   private async handleRequest(request: JsonRpcRequest) {
-    console.log('IFRAME REQUEST', request);
     if (request.method === "connext_authenticate") {
       this.channelProvider = await this.initializeChannelProvider(
         request.params.ethProviderUrl,
         request.params.nodeUrl,
-        request.params.userSecretEntropy,
+        request.params.userSecretEntropy
       );
       return { success: true };
     }
-    if (typeof this.channelProvider === 'undefined') {
-      throw new Error("Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands");
+    if (typeof this.channelProvider === "undefined") {
+      throw new Error(
+        "Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands"
+      );
     }
-    return await this.channelProvider.send(request.method as ChannelMethods, request.params);
+    return await this.channelProvider.send(
+      request.method as ChannelMethods,
+      request.params
+    );
   }
 }

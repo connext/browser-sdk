@@ -2,9 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <script type="text/javascript" src="dist/connext.js"></script>
+    <script type="text/javascript" src="dist/index.js"></script>
     <script>
       window.connext = new window.ConnextSDK("rinkeby", {
+        logLevel: 3,
         iframeSrc: "http://localhost:3030",
       });
       function login() {
@@ -24,7 +25,10 @@
       }
       function transfer() {
         connext
-          .transfer("0xDEADBEEF", "1.23")
+          .transfer(
+            "indra6WYYHjQsgU7KRWHVb7NQL5NvYwoMibtAUNM7QwmNJqXacRbvZ7",
+            "1.23"
+          )
           .then((x) => console.log("TRANSFER", x));
       }
       function getTransactionHistory() {
@@ -34,7 +38,7 @@
       }
     </script>
   </head>
-  <body style="background-color: #d3d3d3;">
+  <body style="background-color: #d3d3d3">
     <button onclick="login()">Login</button>
     <button onclick="publicIdentifier()">Public Identifier</button>
     <button onclick="deposit()">Deposit</button>

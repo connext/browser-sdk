@@ -12,6 +12,7 @@ function App() {
   const amount = BigNumber.from(5);
 
   const connext = new ConnextSDK("rinkeby", {
+    logLevel: 3,
     iframeSrc: "http://localhost:3030",
   });
 

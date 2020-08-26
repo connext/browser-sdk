@@ -4,6 +4,7 @@ import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
 import { BigNumber } from "ethers";
 import * as connext from "@connext/client";
+import { toWad } from "@connext/utils";
 
 import Modal from "./components/Modal";
 import {
@@ -115,14 +116,14 @@ class ConnextSDK {
       );
     }
     try {
-      const result = await this.channel.transfer({
+      await this.channel.transfer({
         recipient,
-        amount,
+        amount: toWad(amount),
         assetId: this.assetId,
       });
       return true;
     } catch (error) {
-      console.log(error);
+      console.error(error);
       throw error;
     }
   }
@@ -243,7 +244,7 @@ class ConnextSDK {
       MULTISIG_BALANCE_PRE_DEPOSIT
     );
     if (preDepositBalance === null) {
-      await this.unsubscribeToDeposit();
+      return this.unsubscribeToDeposit();
     }
     const balance = await this.getOnChainBalance();
     if (BigNumber.from(balance).gt(BigNumber.from(preDepositBalance))) {

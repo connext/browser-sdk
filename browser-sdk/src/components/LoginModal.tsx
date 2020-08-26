@@ -22,7 +22,7 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
   const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!e.currentTarget.checkValidity()) {
-      console.log("Invalid email!");
+      console.error("Invalid email!");
       return;
     }
 

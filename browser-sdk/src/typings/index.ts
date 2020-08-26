@@ -7,6 +7,7 @@ export interface ConnextSDKOptions {
   iframeSrc: string;
   magicKey: string;
   channelProvider?: ChannelProvider;
+  logLevel: number;
 }
 
 export interface ConnextTransaction {

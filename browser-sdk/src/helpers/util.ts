@@ -90,6 +90,7 @@ export const getSdkOptions = (
   let network =
     typeof opts === "string" ? getNetworkName(opts) : DEFAULT_NETWORK;
   let options: ConnextSDKOptions = {
+    logLevel: 0,
     assetId: addressBook[getChainId(network)].Token.address,
     iframeSrc: DEFAULT_IFRAME_SRC,
     magicKey: DEFAULT_MAGIC_KEY,
