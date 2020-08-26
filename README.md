@@ -76,7 +76,7 @@ await connext.withdraw();
 
 ## Advanced Configuration
 
-By default the browser SDK uses Eth in production and connects to our bootstrap Connext node on testnet or mainnet.
+By default the browser SDK uses Dai, a USD-stable token on Ethereum, and connects to our bootstrap Connext node on testnet or mainnet.
 
 You can use the SDK with [your own Connext node](https://docs.connext.network/en/latest/how-to/deploy-indra.html) and/or token too -- just pass in the following when instantiating:
 
