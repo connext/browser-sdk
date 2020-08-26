@@ -80,10 +80,10 @@ You can use the SDK with [your own Connext node](https://docs.connext.network/en
 
 ```javascript
 const connext = new ConnextSDK({
-      assetId: "0xabc123..." // Token address (0x0 for Eth)
-      nodeUrl: "https://node.example.com"
-      ethProviderUrl: "https://infura.com/abc123
-   })
+   assetId: "0xabc123..." // Token address (0x0 for Eth)
+   nodeUrl: "https://node.example.com"
+   ethProviderUrl: "https://infura.com/abc123
+})
 ```
 
 ## API Reference
