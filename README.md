@@ -1,3 +1,5 @@
+![Alt text](https://github.com/connext/browser-sdk/blob/master/public/Connext-Horizontal-Logo.png?raw=true)
+
 # Connext Browser SDK
 
 The Connext Browser SDK is the simplest way to add micropayments to any web app.
