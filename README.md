@@ -107,11 +107,11 @@ To work on the Connext Browser SDK itself:
 
 ```bash
 $ git clone git@github.com:connext/browser-connext.git
-$ make build-and-watch-sdk
+$ make browser-sdk
 ```
 
 Now, you should be able to open the demo and test like so:
 
 ```bash
-$ make serve-demo-app
+$ make start
 ```
