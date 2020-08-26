@@ -1,6 +1,7 @@
+import { addressBook } from "@connext/contracts";
+
 import { ConnextSDKOptions } from "../typings";
 import {
-  DEFAULT_ASSET_ID,
   DEFAULT_NETWORK,
   CONFIG_OPTIONS,
   DEFAULT_IFRAME_SRC,
@@ -39,6 +40,19 @@ export function getNetworkName(option: string): string {
   throw new Error(`Invalid configuration matching: ${option}`);
 }
 
+export function getChainId(network: string): number {
+  switch (network) {
+    case "localhost":
+      return 1337;
+    case "rinkeby":
+      return 4;
+    case "mainnet":
+      return 1;
+    default:
+      throw new Error(`Network not supported`);
+  }
+}
+
 export const getUrlOptions = (
   network: string
 ): { ethProviderUrl: string; nodeUrl: string } => {
@@ -73,18 +87,15 @@ export const getSdkOptions = (
   opts?: string | Partial<ConnextSDKOptions>,
   overrideOpts?: Partial<ConnextSDKOptions>
 ): ConnextSDKOptions => {
+  let network =
+    typeof opts === "string" ? getNetworkName(opts) : DEFAULT_NETWORK;
   let options: ConnextSDKOptions = {
-    assetId: DEFAULT_ASSET_ID,
+    assetId: addressBook[getChainId(network)].Token.address,
     iframeSrc: DEFAULT_IFRAME_SRC,
     magicKey: DEFAULT_MAGIC_KEY,
-    ...getUrlOptions(DEFAULT_NETWORK),
+    ...getUrlOptions(network),
   };
-  if (typeof opts === "string") {
-    options = {
-      ...options,
-      ...getUrlOptions(getNetworkName(opts)),
-    };
-  } else if (typeof opts !== "undefined") {
+  if (typeof opts !== "undefined" && typeof opts !== "string") {
     options = {
       ...options,
       ...opts,

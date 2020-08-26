@@ -1,9 +1,6 @@
-import { constants } from "ethers";
-
 export const DEFAULT_IFRAME_SRC =
   "https://production.d23ph7uvdo8tqp.amplifyapp.com/";
 export const DEFAULT_MAGIC_KEY = "pk_live_AF53537280E47C75";
-export const DEFAULT_ASSET_ID = constants.AddressZero;
 
 export const DEFAULT_NETWORK = "rinkeby";
 
