@@ -41,7 +41,7 @@ const connext = new ConnextSDK();
 await connext.login();
 ```
 
-Note that by default the sdk will spin up in `sandbox` mode on the Rinkeby Ethereum testnet. You will be able to create and send transactions, but they will not use real money. To send real-world value, you can instantiate the sdk in `production` mode:
+Note that by default the sdk will spin up in `staging` mode on the Rinkeby Ethereum testnet. You will be able to create and send transactions, but they will not use real money. To send real-world value, you can instantiate the sdk in `production` mode:
 
 ```javascript
 const connext = new ConnextSDK("production");
@@ -76,7 +76,7 @@ await connext.withdraw();
 
 ## Advanced Configuration
 
-By default the browser SDK uses Dai, a USD-stable Ethereum token and connects to our bootstrap Connext node on testnet or mainnet.
+By default the browser SDK uses Eth in production and connects to our bootstrap Connext node on testnet or mainnet.
 
 You can use the SDK with [your own Connext node](https://docs.connext.network/en/latest/how-to/deploy-indra.html) and/or token too -- just pass in the following when instantiating:
 
@@ -87,6 +87,8 @@ const connext = new ConnextSDK({
    ethProviderUrl: "https://infura.com/abc123
 })
 ```
+
+Note that our bootstrap nodes will not work with custom assets. **If you are using your own token, you will need to run your own Connext node**.
 
 ## API Reference
 
