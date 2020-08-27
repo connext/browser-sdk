@@ -100,6 +100,8 @@ Note that our bootstrap nodes will not work with custom assets. **If you are usi
 |        `balance`        |           `await connext.balance();`            |                        Gets the user's balance                         |                                                                                                                                                                     |    String e.g. `0.12456`     |
 |       `transfer`        |      `await connext.transfer(id, amount);`      |            Sends amount to the specified public identifier             |                                                  - String: public identifier of recipient - String: amount to send                                                  |                              |
 | `getTransactionHistory` |    `await connext.getTransactionHistory();`     |                Gets a history of previous transactions                 |                                                                                                                                                                     |            //TODO            |
+|                         |
+|        `logout`         |           `await connext.lougout();`            |                   Logs user out and resets SDK state                   |                                                                                                                                                                     |                              |
 
 ## Development
 

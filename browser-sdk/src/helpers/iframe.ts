@@ -5,7 +5,8 @@ import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
 import { ChannelProvider } from "@connext/channel-provider";
 
-export class IframeRpcConnection extends EventEmitter<string>
+export class IframeRpcConnection
+  extends EventEmitter<string>
   implements IRpcConnection {
   public iframe: HTMLIFrameElement | undefined;
   public opts: IframeOptions;
@@ -68,9 +69,7 @@ export class IframeRpcConnection extends EventEmitter<string>
     }
     return new Promise((resolve) => {
       this.on("iframe-initialized", () => {
-        this.connected = true;
-        this.emit("connect");
-        this.emit("open");
+        this.onConnect();
         resolve();
       });
       this.iframe = renderElement(
@@ -83,6 +82,17 @@ export class IframeRpcConnection extends EventEmitter<string>
         window.document.body
       ) as HTMLIFrameElement;
     });
+  }
+
+  public async unrender(): Promise<void> {
+    if (typeof this.iframe === "undefined") {
+      return Promise.resolve();
+    }
+    try {
+      window.document.body.removeChild(this.iframe);
+    } finally {
+      this.iframe = undefined;
+    }
   }
 
   public handleIncomingMessages(e: MessageEvent) {
@@ -108,8 +118,8 @@ export class IframeRpcConnection extends EventEmitter<string>
 
   public async close() {
     this.unsubscribe();
-    this.emit("disconnect");
-    this.emit("close");
+    await this.unrender();
+    this.onDisconnect();
   }
 
   public subscribe() {
@@ -129,6 +139,18 @@ export class IframeRpcConnection extends EventEmitter<string>
       "message",
       this.handleIncomingMessages.bind(this)
     );
+  }
+
+  private onConnect() {
+    this.connected = true;
+    this.emit("connect");
+    this.emit("open");
+  }
+
+  private onDisconnect() {
+    this.connected = false;
+    this.emit("disconnect");
+    this.emit("close");
   }
 }
 

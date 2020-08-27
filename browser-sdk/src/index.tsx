@@ -4,7 +4,7 @@ import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
 import { BigNumber } from "ethers";
 import * as connext from "@connext/client";
-import { toWad } from "@connext/utils";
+import { toWad, fromWad } from "@connext/utils";
 
 import Modal from "./components/Modal";
 import {
@@ -62,6 +62,22 @@ class ConnextSDK {
     return this.channel?.publicIdentifier;
   }
 
+  public async logout(): Promise<boolean> {
+    if (
+      typeof this.magic === "undefined" ||
+      typeof this.channel === "undefined" ||
+      typeof this.modal === "undefined"
+    ) {
+      throw new SDKError(
+        "Not initialized - make sure to await login() first before calling logout()!"
+      );
+    }
+    await this.magic.user.logout();
+    await this.channelProvider.close();
+    await this.reset();
+    return true;
+  }
+
   public async login(): Promise<boolean> {
     await this.init();
     if (typeof this.modal === "undefined") {
@@ -106,7 +122,7 @@ class ConnextSDK {
       );
     }
     const result = await this.channel.getFreeBalance(this.assetId);
-    return BigNumber.from(result[this.channel.signerAddress]).toHexString();
+    return fromWad(result[this.channel.signerAddress]);
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
@@ -275,6 +291,12 @@ class ConnextSDK {
       <Modal sdkInstance={this} />,
       renderElement("div", { id: CONNEXT_OVERLAY_ID }, window.document.body)
     ) as unknown) as Modal;
+  }
+
+  private async reset() {
+    this.magic = undefined;
+    this.channel = undefined;
+    this.modal = undefined;
   }
 }
 

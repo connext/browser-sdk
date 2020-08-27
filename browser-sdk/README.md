@@ -29,23 +29,26 @@ import ConnextSDK from "connext";
 
 const connext = new ConnextSDK();
 
-// login
+// Login User
 await connext.login();
 
-// publicIdentifier
+// Get User ID
 const publicIdentifier = connext.publicIdentifier;
 
-// balance
+// Get Token Balance
 const balance = await connext.balance();
 
-// deposit
+// Deposit Tokens
 await connext.deposit();
 
-// transfer
+// Transfer Tokens
 await connext.transfer("indra987zxy...", "12.5");
 
-// withdraw
+// Withdraw Tokens
 await connext.withdraw();
+
+// Logout User
+await connext.logout();
 ```
 
 ## Documentation
