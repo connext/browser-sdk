@@ -74,6 +74,7 @@ class ConnextSDK {
     }
     await this.magic.user.logout();
     await this.channelProvider.close();
+    await this.unrenderModal();
     await this.reset();
     return true;
   }
@@ -291,6 +292,12 @@ class ConnextSDK {
       <Modal sdkInstance={this} />,
       renderElement("div", { id: CONNEXT_OVERLAY_ID }, window.document.body)
     ) as unknown) as Modal;
+  }
+
+  private async unrenderModal() {
+    const elm = document.getElementById(CONNEXT_OVERLAY_ID);
+    if (!elm) return;
+    window.document.body.removeChild(elm);
   }
 
   private async reset() {
