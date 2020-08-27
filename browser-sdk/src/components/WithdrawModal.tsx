@@ -56,7 +56,7 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
           <input
             required
             type="number"
-            placeholder="Amount [ETH]"
+            placeholder="Token Amount"
             value={amount}
             step="any"
             onChange={(e) => setAmount(e.target.value)}

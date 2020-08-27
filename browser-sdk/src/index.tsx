@@ -4,7 +4,7 @@ import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
 import { BigNumber } from "ethers";
 import * as connext from "@connext/client";
-import { toWad } from "@connext/utils";
+import { toWad, fromWad } from "@connext/utils";
 
 import Modal from "./components/Modal";
 import {
@@ -106,7 +106,7 @@ class ConnextSDK {
       );
     }
     const result = await this.channel.getFreeBalance(this.assetId);
-    return BigNumber.from(result[this.channel.signerAddress]).toHexString();
+    return fromWad(result[this.channel.signerAddress]);
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
