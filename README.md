@@ -63,9 +63,7 @@ const balance = await connext.balance(); // balance = "1.234567"
 And send micropayments using a recipient identifier and amount:
 
 ```javascript
-const recipientIdentifier = "indra987zxy...";
-const amount = "0.00001";
-await connext.transfer(recipientIdentifier, amount);
+await connext.transfer("indra987zxy...", "12.5");
 ```
 
 Lastly, to open the withdraw UI:
@@ -84,7 +82,7 @@ You can use the SDK with [your own Connext node](https://docs.connext.network/en
 const connext = new ConnextSDK({
    assetId: "0xabc123..." // Token address (0x0 for Eth)
    nodeUrl: "https://node.example.com"
-   ethProviderUrl: "https://infura.com/abc123
+   ethProviderUrl: "https://infura.com/abc123"
 })
 ```
 

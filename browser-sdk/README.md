@@ -42,9 +42,7 @@ const balance = await connext.balance();
 await connext.deposit();
 
 // transfer
-const recipientIdentifier = "indra987zxy...";
-const amount = "0.00001";
-await connext.transfer(recipientIdentifier, amount);
+await connext.transfer("indra987zxy...", "12.5");
 
 // withdraw
 await connext.withdraw();
