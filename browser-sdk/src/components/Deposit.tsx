@@ -3,14 +3,28 @@ import QRCode from "react-qr-code";
 import { BigNumber } from "ethers";
 
 import { MULTISIG_BALANCE_PRE_DEPOSIT } from "../constants";
+import ConnextSDK from "..";
 
-function DepositModal({ sdkInstance, onDepositComplete }) {
+interface IDepositProps {
+  sdkInstance: ConnextSDK;
+  onDepositComplete: (value?: any) => any;
+}
+
+function Deposit({ sdkInstance, onDepositComplete }: IDepositProps) {
+  if (typeof sdkInstance.channel === "undefined") {
+    throw new Error("Missing channel instance");
+  }
   const depositAddress = sdkInstance.channel.multisigAddress;
   const [depositStage, setDepositStage] = useState("show_qr");
 
   useEffect(() => {
     (async () => {
-      sdkInstance.channel.requestDepositRights({ assetId: sdkInstance.assetId });
+      if (typeof sdkInstance.channel === "undefined") {
+        throw new Error("Missing channel instance");
+      }
+      sdkInstance.channel.requestDepositRights({
+        assetId: sdkInstance.assetId,
+      });
       await sdkInstance.subscribeToDeposit();
       sdkInstance.channel.ethProvider.on("block", onDepositSuccess);
     })();
@@ -28,12 +42,15 @@ function DepositModal({ sdkInstance, onDepositComplete }) {
       setDepositStage("deposit_success");
       return await unsubscribeFromDeposit();
     }
-  }
+  };
 
   const unsubscribeFromDeposit = async () => {
+    if (typeof sdkInstance.channel === "undefined") {
+      throw new Error("Missing channel instance");
+    }
     sdkInstance.channel.ethProvider.off("block", onDepositSuccess);
     onDepositComplete(true);
-  }
+  };
 
   return (
     <div className="flex-column">
@@ -50,4 +67,4 @@ function DepositModal({ sdkInstance, onDepositComplete }) {
   );
 }
 
-export default DepositModal;
+export default Deposit;

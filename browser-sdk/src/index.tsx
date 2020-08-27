@@ -26,13 +26,13 @@ import { ConnextSDKOptions, ConnextTransaction } from "./typings";
 import { IConnextClient } from "@connext/types";
 
 class ConnextSDK {
-  private assetId: string;
-  private ethProviderUrl: string;
-  private nodeUrl: string;
-  private magic: Magic | undefined;
-  private channelProvider: ChannelProvider | IframeChannelProvider;
-  private channel: IConnextClient | undefined;
-  private modal: Modal | undefined;
+  public assetId: string;
+  public ethProviderUrl: string;
+  public nodeUrl: string;
+  public magic: Magic | undefined;
+  public channelProvider: ChannelProvider | IframeChannelProvider;
+  public channel: IConnextClient | undefined;
+  public modal: Modal | undefined;
 
   constructor(
     opts?: string | Partial<ConnextSDKOptions>,
@@ -164,7 +164,7 @@ class ConnextSDK {
 
   // ---------- Private ----------------------------------------------- //
 
-  private async init() {
+  public async init() {
     if (typeof this.modal !== "undefined") {
       return; // already initialized
     }
@@ -181,14 +181,14 @@ class ConnextSDK {
     await this.renderModal();
   }
 
-  private async initChannel() {
+  public async initChannel() {
     this.channel = await connext.connect({
       ethProviderUrl: this.ethProviderUrl,
       channelProvider: this.channelProvider,
     });
   }
 
-  private async getOnChainBalance() {
+  public async getOnChainBalance() {
     if (typeof this.channel === "undefined") {
       throw new SDKError(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
@@ -202,7 +202,7 @@ class ConnextSDK {
     return balance;
   }
 
-  private async checkDepositSubscription() {
+  public async checkDepositSubscription() {
     const preDepositBalance = window.localStorage.getItem(
       MULTISIG_BALANCE_PRE_DEPOSIT
     );
@@ -216,7 +216,7 @@ class ConnextSDK {
     }
   }
 
-  private async subscribeToDeposit() {
+  public async subscribeToDeposit() {
     if (typeof this.channel === "undefined") {
       throw new SDKError("Not initialized");
     }
@@ -228,14 +228,14 @@ class ConnextSDK {
     this.channel.ethProvider.on("block", this.onNewBlock.bind(this));
   }
 
-  private async unsubscribeToDeposit() {
+  public async unsubscribeToDeposit() {
     if (typeof this.channel === "undefined") {
       throw new SDKError("Not initialized");
     }
     this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
   }
 
-  private async onNewBlock() {
+  public async onNewBlock() {
     if (typeof this.channel === "undefined") {
       throw new SDKError("Not initialized");
     }
@@ -252,7 +252,7 @@ class ConnextSDK {
     }
   }
 
-  private async onDepositSuccess() {
+  public async onDepositSuccess() {
     if (
       typeof this.modal === "undefined" ||
       typeof this.channel === "undefined"
@@ -264,7 +264,7 @@ class ConnextSDK {
     this.channel.rescindDepositRights({ assetId: this.assetId });
   }
 
-  private async renderModal() {
+  public async renderModal() {
     // create the styled overlay UI container, and render the UI inside it using React
     renderElement(
       "style",

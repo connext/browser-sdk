@@ -1,36 +1,28 @@
 import React from "react";
-import DepositModal from "./DepositModal";
-import WithdrawModal from "./WithdrawModal";
-import LoginModal from "./LoginModal";
+import Deposit from "./Deposit";
+import Withdraw from "./Withdraw";
+import Login from "./Login";
+import ConnextSDK from "..";
 
 interface IProps {
-  sdkInstance: any;
+  sdkInstance: ConnextSDK;
 }
 
 interface IState {
   mode: string;
-
-  // login fields
-  onLoginComplete?: () => any;
-  loginKey: boolean;
-
-  // deposit fields
-  onDepositComplete?: () => any;
-  depositKey: boolean;
-
-  // withdraw fields
-  onWithdrawComplete?: () => any;
-  withdrawKey: boolean;
+  onLoginComplete: (value?: any) => any;
+  onDepositComplete: (value?: any) => any;
+  onWithdrawComplete: (value?: any) => any;
 }
 
 class Modal extends React.Component<IProps, IState> {
-  constructor(props: any) {
+  constructor(props: IProps) {
     super(props);
     this.state = {
       mode: "",
-      loginKey: false,
-      depositKey: false,
-      withdrawKey: false,
+      onLoginComplete: () => {},
+      onDepositComplete: () => {},
+      onWithdrawComplete: () => {},
     };
   }
 
@@ -38,24 +30,21 @@ class Modal extends React.Component<IProps, IState> {
     switch (this.state.mode) {
       case "LOGIN":
         return (
-          <LoginModal
-            key={this.state.loginKey.toString()}
+          <Login
             sdkInstance={this.props.sdkInstance}
             onLoginComplete={this.state.onLoginComplete}
           />
         );
       case "DEPOSIT":
         return (
-          <DepositModal
-            key={this.state.depositKey.toString()}
+          <Deposit
             sdkInstance={this.props.sdkInstance}
             onDepositComplete={this.state.onDepositComplete}
           />
         );
       case "WITHDRAW":
         return (
-          <WithdrawModal
-            key={this.state.withdrawKey.toString()}
+          <Withdraw
             sdkInstance={this.props.sdkInstance}
             onWithdrawComplete={this.state.onWithdrawComplete}
           />
@@ -74,7 +63,6 @@ class Modal extends React.Component<IProps, IState> {
       this.setState({
         mode: "LOGIN",
         onLoginComplete: resolve,
-        loginKey: !this.state.loginKey,
       });
     });
   }
@@ -84,7 +72,6 @@ class Modal extends React.Component<IProps, IState> {
       this.setState({
         mode: "DEPOSIT",
         onDepositComplete: resolve,
-        depositKey: !this.state.depositKey,
       });
     });
   }
@@ -94,7 +81,6 @@ class Modal extends React.Component<IProps, IState> {
       this.setState({
         mode: "WITHDRAW",
         onWithdrawComplete: resolve,
-        withdrawKey: !this.state.withdrawKey,
       });
     });
   }

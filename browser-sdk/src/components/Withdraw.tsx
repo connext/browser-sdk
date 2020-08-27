@@ -2,8 +2,14 @@ import React, { useState } from "react";
 import { toWad } from "@connext/utils";
 
 import { isValidAddress } from "../helpers";
+import ConnextSDK from "..";
 
-function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
+interface IWithdrawProps {
+  sdkInstance: ConnextSDK;
+  onWithdrawComplete: (value?: any) => any;
+}
+
+function Withdraw({ sdkInstance, onWithdrawComplete }: IWithdrawProps) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [withdrawStage, setWithdrawStage] = useState("choose_recipient");
@@ -29,6 +35,9 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
       return;
     }
     try {
+      if (typeof sdkInstance.channel === "undefined") {
+        throw new Error("Missing channel instance");
+      }
       await sdkInstance.channel.withdraw({
         recipient,
         amount: toWad(amount),
@@ -75,4 +84,4 @@ function WithdrawModal({ sdkInstance, onWithdrawComplete }) {
   );
 }
 
-export default WithdrawModal;
+export default Withdraw;

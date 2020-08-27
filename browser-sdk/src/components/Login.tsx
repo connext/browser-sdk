@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
+import ConnextSDK from "..";
 
-function LoginModal({ sdkInstance, onLoginComplete }) {
+interface ILoginProps {
+  sdkInstance: ConnextSDK;
+  onLoginComplete: (value?: any) => any;
+}
+
+function Login({ sdkInstance, onLoginComplete }: ILoginProps) {
   const [email, setEmail] = useState("");
   const [loginStage, setLoginStage] = useState("");
 
   useEffect(() => {
     (async () => {
+      if (typeof sdkInstance.magic === "undefined") {
+        throw new Error("Missing magic instance");
+      }
       const isAlreadyLoggedIn = await sdkInstance.magic.user.isLoggedIn();
       if (isAlreadyLoggedIn) {
         setLoginStage("initializing_connext");
@@ -27,6 +36,9 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
     }
 
     try {
+      if (typeof sdkInstance.magic === "undefined") {
+        throw new Error("Missing magic instance");
+      }
       setLoginStage("authenticating");
       await sdkInstance.magic.auth.loginWithMagicLink({ email, showUI: false });
     } catch (error) {
@@ -72,4 +84,4 @@ function LoginModal({ sdkInstance, onLoginComplete }) {
   );
 }
 
-export default LoginModal;
+export default Login;
