@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import { BigNumber } from "ethers";
+import { BigNumber, utils, providers } from "ethers";
 import * as connext from "@connext/client";
 import { toWad, fromWad } from "@connext/utils";
 
@@ -60,23 +60,6 @@ class ConnextSDK {
       );
     }
     return this.channel?.publicIdentifier;
-  }
-
-  public async logout(): Promise<boolean> {
-    if (
-      typeof this.magic === "undefined" ||
-      typeof this.channel === "undefined" ||
-      typeof this.modal === "undefined"
-    ) {
-      throw new SDKError(
-        "Not initialized - make sure to await login() first before calling logout()!"
-      );
-    }
-    await this.magic.user.logout();
-    await this.channelProvider.close();
-    await this.unrenderModal();
-    await this.reset();
-    return true;
   }
 
   public async login(): Promise<boolean> {
@@ -156,16 +139,34 @@ class ConnextSDK {
     return result as any;
   }
 
-  async authenticateWithMagic() {
+  public async logout(): Promise<boolean> {
+    if (
+      typeof this.magic === "undefined" ||
+      typeof this.channel === "undefined" ||
+      typeof this.modal === "undefined"
+    ) {
+      throw new SDKError(
+        "Not initialized - make sure to await login() first before calling logout()!"
+      );
+    }
+    await this.magic.user.logout();
+    await this.channelProvider.close();
+    await this.unrenderModal();
+    await this.reset();
+    return true;
+  }
+
+  // ---------- Private ----------------------------------------------- //
+
+  private async authenticateWithMagic() {
     if (typeof this.magic === "undefined") {
       throw new SDKError("Magic is undefined");
     }
-    const accounts = await this.magic.rpcProvider.send("eth_accounts");
+    const accounts = await this.magic.rpcProvider.send("eth_accounts", []);
     const signature = await this.magic.rpcProvider.send("personal_sign", [
-      AUTHENTICATION_MESSAGE,
+      utils.hexlify(utils.toUtf8Bytes(AUTHENTICATION_MESSAGE)),
       accounts[0],
     ]);
-
     await this.channelProvider.connection.send({
       id: 1,
       jsonrpc: "2.0",
@@ -179,11 +180,14 @@ class ConnextSDK {
     await this.initChannel();
   }
 
-  // ---------- Private ----------------------------------------------- //
-
   private async init() {
     if (typeof this.modal !== "undefined") {
       return; // already initialized
+    }
+
+    if (isIframe(this.channelProvider)) {
+      // this makes sure the iframe is re-render after logout
+      await this.channelProvider.connection.open();
     }
 
     // wait for this.iframeRpc to be fully initialized
@@ -301,7 +305,6 @@ class ConnextSDK {
   }
 
   private async reset() {
-    this.magic = undefined;
     this.channel = undefined;
     this.modal = undefined;
   }
