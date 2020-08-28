@@ -36,6 +36,9 @@
           .getTransactionHistory()
           .then((x) => console.log("GET TRANSACTION HISTORY", x));
       }
+      function logout() {
+        connext.logout().then((x) => console.log("LOGOUT", x));
+      }
     </script>
   </head>
   <body style="background-color: #d3d3d3">
@@ -46,5 +49,6 @@
     <button onclick="balance()">Balance</button>
     <button onclick="transfer()">Transfer</button>
     <button onclick="getTransactionHistory()">Get Transaction History</button>
+    <button onclick="logout()">Logout</button>
   </body>
 </html>
