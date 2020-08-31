@@ -19,7 +19,6 @@ import {
   getText,
 } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction, LanguageText } from "./typings";
-import { LOGIN_SUBMIT } from "./constants";
 
 class ConnextSDK extends EventEmitter {
   public assetId: string;
@@ -87,7 +86,7 @@ class ConnextSDK extends EventEmitter {
         resolve(false); // already logged in automatically
       } else {
         this.modal.setLoginStage(constants.LOGIN_PROMPT);
-        this.on(LOGIN_SUBMIT, async ({ email }) => {
+        this.on(constants.LOGIN_SUBMIT, async ({ email }) => {
           if (typeof this.modal === "undefined") {
             throw new Error(this.text.error.missing_modal);
           }
