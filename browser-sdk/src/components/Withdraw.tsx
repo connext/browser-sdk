@@ -6,13 +6,13 @@ import ConnextSDK from "..";
 
 interface IWithdrawProps {
   sdkInstance: ConnextSDK;
-  onWithdrawComplete: (value?: any) => any;
+  stage: string;
+  onSubmit: (value?: any) => void;
 }
 
-function Withdraw({ sdkInstance, onWithdrawComplete }: IWithdrawProps) {
+function Withdraw({ sdkInstance, stage, onSubmit }: IWithdrawProps) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [withdrawStage, setWithdrawStage] = useState("choose_recipient");
 
   const withdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,32 +34,16 @@ function Withdraw({ sdkInstance, onWithdrawComplete }: IWithdrawProps) {
       console.error("Invalid amount!");
       return;
     }
-    try {
-      if (typeof sdkInstance.channel === "undefined") {
-        throw new Error("Missing channel instance");
-      }
-      await sdkInstance.channel.withdraw({
-        recipient,
-        amount: toWad(amount),
-        assetId: sdkInstance.assetId,
-      });
-    } catch (error) {
-      console.error(error);
-      setWithdrawStage("failure");
-      onWithdrawComplete(false);
-      throw error;
-    }
-    setWithdrawStage("success");
-    onWithdrawComplete(true);
+    onSubmit({ recipient, amount });
   };
   // TODO: cancel button
   return (
     <div className="flex-column">
-      {withdrawStage === "success" ? (
+      {stage === "success" ? (
         <h3>Withdraw successful!</h3>
-      ) : withdrawStage === "failure" ? (
+      ) : stage === "failure" ? (
         <h3>Withdraw failed - try again!</h3>
-      ) : withdrawStage === "choose_recipient" ? (
+      ) : stage === "choose_recipient" ? (
         <form onSubmit={withdraw}>
           <h3>Please enter amount to withdraw and recipient.</h3>
           <input

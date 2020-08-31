@@ -2,9 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import { BigNumber, utils, providers } from "ethers";
+import { BigNumber, utils } from "ethers";
 import * as connext from "@connext/client";
 import { toWad, fromWad } from "@connext/utils";
+import { IConnextClient } from "@connext/types";
 
 import Modal from "./components/Modal";
 import {
@@ -17,13 +18,11 @@ import {
 import {
   isIframe,
   renderElement,
-  SDKError,
   getSdkOptions,
   getFreeBalanceOnChain,
   IframeChannelProvider,
 } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction } from "./typings";
-import { IConnextClient } from "@connext/types";
 
 class ConnextSDK {
   public assetId: string;
@@ -55,7 +54,7 @@ class ConnextSDK {
 
   get publicIdentifier(): string {
     if (typeof this.channel?.publicIdentifier === "undefined") {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before getting publicIdentifier!"
       );
     }
@@ -65,14 +64,64 @@ class ConnextSDK {
   public async login(): Promise<boolean> {
     await this.init();
     if (typeof this.modal === "undefined") {
-      throw new SDKError("Modal has not been initialized");
+      throw new Error("Modal has not been initialized");
     }
     if (isIframe(this.channelProvider)) {
-      await this.modal.startLogin();
+      return this.loginWithMagic();
     } else {
       await this.initChannel();
     }
     return true;
+  }
+
+  public loginWithMagic(): Promise<boolean> {
+    return new Promise(async (resolve) => {
+      if (typeof this.magic === "undefined") {
+        throw new Error("Missing magic instance");
+      }
+      if (typeof this.modal === "undefined") {
+        throw new Error("Missing modal instance");
+      }
+      const onLoginSubmit = async ({ email }) => {
+        if (typeof this.modal === "undefined") {
+          throw new Error("Missing modal instance");
+        }
+
+        try {
+          if (typeof this.magic === "undefined") {
+            throw new Error("Missing magic instance");
+          }
+          this.modal.setLoginStage("authenticating");
+          await this.magic.auth.loginWithMagicLink({ email, showUI: false });
+        } catch (error) {
+          this.modal.setLoginStage("failure");
+          throw error;
+        }
+
+        this.modal.setLoginStage("initializing_connext");
+        await this.authenticateWithMagic(); // TODO: handle errors
+        this.modal.setLoginStage("success");
+        this.checkDepositSubscription();
+        resolve(true);
+      };
+      await this.modal.displayLogin(onLoginSubmit.bind(this));
+      const isAlreadyLoggedIn = await this.magic.user.isLoggedIn();
+      if (isAlreadyLoggedIn) {
+        this.modal.setLoginStage("initializing_connext");
+        await this.authenticateWithMagic(); // TODO: handle errors
+        this.modal.setLoginStage("success");
+        resolve(false); // already logged in automatically
+        this.checkDepositSubscription();
+      } else {
+        this.modal.setLoginStage("choose_user");
+      }
+    });
+  }
+
+  public async onLoginSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (typeof this.modal === "undefined") {
+      throw new Error("Missing modal instance");
+    }
   }
 
   public async deposit(): Promise<boolean> {
@@ -80,28 +129,61 @@ class ConnextSDK {
       typeof this.modal === "undefined" ||
       typeof this.channel === "undefined"
     ) {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling deposit()!"
       );
     }
-    return await this.modal.startDeposit();
+    this.modal.displayDeposit(this.channel.multisigAddress);
+    this.modal.setDepositStage("show_qr");
+    this.channel.requestDepositRights({
+      assetId: this.assetId,
+    });
+    await this.subscribeToDeposit();
+    return true;
   }
 
   public async withdraw(): Promise<boolean> {
-    if (
-      typeof this.modal === "undefined" ||
-      typeof this.channel === "undefined"
-    ) {
-      throw new SDKError(
-        "Not initialized - make sure to await login() first before calling withdraw()!"
-      );
-    }
-    return await this.modal.startWithdraw();
+    return new Promise((resolve) => {
+      if (typeof this.modal === "undefined") {
+        throw new Error(
+          "Not initialized - make sure to await login() first before calling withdraw()!"
+        );
+      }
+      const onWithdrawSubmit = async ({ recipient, amount }) => {
+        if (
+          typeof this.modal === "undefined" ||
+          typeof this.channel === "undefined"
+        ) {
+          throw new Error(
+            "Not initialized - make sure to await login() first before calling withdraw()!"
+          );
+        }
+        try {
+          if (typeof this.channel === "undefined") {
+            throw new Error("Missing channel instance");
+          }
+          await this.channel.withdraw({
+            recipient,
+            amount: toWad(amount),
+            assetId: this.assetId,
+          });
+        } catch (error) {
+          console.error(error);
+          this.modal.setWithdrawStage("failure");
+          resolve(false);
+          throw error;
+        }
+        this.modal.setWithdrawStage("success");
+        resolve(true);
+      };
+      this.modal.displayWithdraw(onWithdrawSubmit.bind(this));
+      this.modal.setWithdrawStage("choose_recipient");
+    });
   }
 
   public async balance(): Promise<string> {
     if (typeof this.channel === "undefined") {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling balance()!"
       );
     }
@@ -111,7 +193,7 @@ class ConnextSDK {
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
     if (typeof this.channel === "undefined") {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling transfer()!"
       );
     }
@@ -130,7 +212,7 @@ class ConnextSDK {
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
     if (typeof this.channel === "undefined") {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling getTransactionHistory()!"
       );
     }
@@ -145,7 +227,7 @@ class ConnextSDK {
       typeof this.channel === "undefined" ||
       typeof this.modal === "undefined"
     ) {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling logout()!"
       );
     }
@@ -160,7 +242,7 @@ class ConnextSDK {
 
   public async authenticateWithMagic() {
     if (typeof this.magic === "undefined") {
-      throw new SDKError("Magic is undefined");
+      throw new Error("Magic is undefined");
     }
     const accounts = await this.magic.rpcProvider.send("eth_accounts", []);
     const signature = await this.magic.rpcProvider.send("personal_sign", [
@@ -211,7 +293,7 @@ class ConnextSDK {
 
   public async getOnChainBalance() {
     if (typeof this.channel === "undefined") {
-      throw new SDKError(
+      throw new Error(
         "Not initialized - make sure to await login() first before calling publicIdentifier()!"
       );
     }
@@ -239,7 +321,7 @@ class ConnextSDK {
 
   public async subscribeToDeposit() {
     if (typeof this.channel === "undefined") {
-      throw new SDKError("Not initialized");
+      throw new Error("Not initialized");
     }
     const preDepositBalance = await this.getOnChainBalance();
     window.localStorage.setItem(
@@ -251,14 +333,14 @@ class ConnextSDK {
 
   public async unsubscribeToDeposit() {
     if (typeof this.channel === "undefined") {
-      throw new SDKError("Not initialized");
+      throw new Error("Not initialized");
     }
     this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
   }
 
   public async onNewBlock() {
     if (typeof this.channel === "undefined") {
-      throw new SDKError("Not initialized");
+      throw new Error("Not initialized");
     }
     this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
     const preDepositBalance = window.localStorage.getItem(
@@ -278,7 +360,7 @@ class ConnextSDK {
       typeof this.modal === "undefined" ||
       typeof this.channel === "undefined"
     ) {
-      throw new SDKError("Not initialized");
+      throw new Error("Not initialized");
     }
     window.localStorage.removeItem(MULTISIG_BALANCE_PRE_DEPOSIT);
     await this.unsubscribeToDeposit();

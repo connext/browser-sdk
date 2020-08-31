@@ -8,11 +8,19 @@ interface IProps {
   sdkInstance: ConnextSDK;
 }
 
+interface IViewProps {
+  stage: string;
+  onSubmit: (value?: any) => void;
+}
+
 interface IState {
   mode: string;
-  onLoginComplete: (value?: any) => any;
-  onDepositComplete: (value?: any) => any;
-  onWithdrawComplete: (value?: any) => any;
+  loginProps: IViewProps;
+  depositProps: {
+    stage: string;
+    depositAddress: string;
+  };
+  withdrawProps: IViewProps;
 }
 
 class Modal extends React.Component<IProps, IState> {
@@ -20,9 +28,18 @@ class Modal extends React.Component<IProps, IState> {
     super(props);
     this.state = {
       mode: "",
-      onLoginComplete: () => {},
-      onDepositComplete: () => {},
-      onWithdrawComplete: () => {},
+      loginProps: {
+        stage: "",
+        onSubmit: () => {},
+      },
+      depositProps: {
+        stage: "",
+        depositAddress: "",
+      },
+      withdrawProps: {
+        stage: "",
+        onSubmit: () => {},
+      },
     };
   }
 
@@ -32,21 +49,24 @@ class Modal extends React.Component<IProps, IState> {
         return (
           <Login
             sdkInstance={this.props.sdkInstance}
-            onLoginComplete={this.state.onLoginComplete}
+            stage={this.state.loginProps.stage}
+            onSubmit={this.state.loginProps.onSubmit}
           />
         );
       case "DEPOSIT":
         return (
           <Deposit
             sdkInstance={this.props.sdkInstance}
-            onDepositComplete={this.state.onDepositComplete}
+            stage={this.state.depositProps.stage}
+            depositAddress={this.state.depositProps.depositAddress}
           />
         );
       case "WITHDRAW":
         return (
           <Withdraw
             sdkInstance={this.props.sdkInstance}
-            onWithdrawComplete={this.state.onWithdrawComplete}
+            stage={this.state.withdrawProps.stage}
+            onSubmit={this.state.withdrawProps.onSubmit}
           />
         );
       default:
@@ -57,31 +77,40 @@ class Modal extends React.Component<IProps, IState> {
   render() {
     return <div id="connext-overlay-modal">{this.renderView()}</div>;
   }
-
-  async startLogin() {
-    return new Promise<boolean>((resolve) => {
-      this.setState({
-        mode: "LOGIN",
-        onLoginComplete: resolve,
-      });
+  async displayLogin(onSubmit: (value?: any) => void) {
+    this.setState({
+      mode: "LOGIN",
+      loginProps: { ...this.state.loginProps, onSubmit },
     });
   }
-
-  async startDeposit() {
-    return new Promise<boolean>((resolve) => {
-      this.setState({
-        mode: "DEPOSIT",
-        onDepositComplete: resolve,
-      });
+  async setLoginStage(stage: string) {
+    this.setState({
+      mode: "LOGIN",
+      loginProps: { ...this.state.loginProps, stage },
     });
   }
-
-  async startWithdraw() {
-    return new Promise<boolean>((resolve) => {
-      this.setState({
-        mode: "WITHDRAW",
-        onWithdrawComplete: resolve,
-      });
+  async displayDeposit(depositAddress) {
+    this.setState({
+      mode: "DEPOSIT",
+      depositProps: { ...this.state.depositProps, depositAddress },
+    });
+  }
+  async setDepositStage(stage: string) {
+    this.setState({
+      mode: "DEPOSIT",
+      depositProps: { ...this.state.depositProps, stage },
+    });
+  }
+  async displayWithdraw(onSubmit: (value?: any) => void) {
+    this.setState({
+      mode: "WITHDRAW",
+      withdrawProps: { ...this.state.withdrawProps, onSubmit },
+    });
+  }
+  async setWithdrawStage(stage: string) {
+    this.setState({
+      mode: "WITHDRAW",
+      withdrawProps: { ...this.state.withdrawProps, stage },
     });
   }
 }

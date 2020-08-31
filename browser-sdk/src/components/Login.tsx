@@ -3,69 +3,36 @@ import ConnextSDK from "..";
 
 interface ILoginProps {
   sdkInstance: ConnextSDK;
-  onLoginComplete: (value?: any) => any;
+  stage: string;
+  onSubmit: (value?: any) => void;
 }
 
-function Login({ sdkInstance, onLoginComplete }: ILoginProps) {
+function Login({ sdkInstance, stage, onSubmit }: ILoginProps) {
   const [email, setEmail] = useState("");
-  const [loginStage, setLoginStage] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      if (typeof sdkInstance.magic === "undefined") {
-        throw new Error("Missing magic instance");
-      }
-      const isAlreadyLoggedIn = await sdkInstance.magic.user.isLoggedIn();
-      if (isAlreadyLoggedIn) {
-        setLoginStage("initializing_connext");
-        await sdkInstance.authenticateWithMagic(); // TODO: handle errors
-        setLoginStage("success");
-        onLoginComplete(false); // already logged in automatically
-        sdkInstance.checkDepositSubscription();
-      } else {
-        setLoginStage("choose_user");
-      }
-    })();
-  }, []);
-
-  const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!e.currentTarget.checkValidity()) {
       console.error("Invalid email!");
       return;
     }
 
-    try {
-      if (typeof sdkInstance.magic === "undefined") {
-        throw new Error("Missing magic instance");
-      }
-      setLoginStage("authenticating");
-      await sdkInstance.magic.auth.loginWithMagicLink({ email, showUI: false });
-    } catch (error) {
-      setLoginStage("failure");
-      throw error;
-    }
-
-    setLoginStage("initializing_connext");
-    await sdkInstance.authenticateWithMagic(); // TODO: handle errors
-    setLoginStage("success");
-    onLoginComplete(true); // new login
-    sdkInstance.checkDepositSubscription();
+    onSubmit({ email });
   };
 
   return (
     <div className="flex-column">
-      {loginStage === "authenticating" ? (
+      {stage === "authenticating" ? (
         <h3>Check your email for a login link!</h3>
-      ) : loginStage === "initializing_connext" ? (
+      ) : stage === "initializing_connext" ? (
         <h3>Setting up Connext...</h3>
-      ) : loginStage === "success" ? (
+      ) : stage === "success" ? (
         <h3>Login successful!</h3>
-      ) : loginStage === "failure" ? (
+      ) : stage === "failure" ? (
         <h3>Login failed - try again!</h3>
-      ) : loginStage === "choose_user" ? (
+      ) : stage === "choose_user" ? (
         <>
-          <form onSubmit={loginUser}>
+          <form onSubmit={onFormSubmit}>
             <h3>Please enter your email to login.</h3>
             <input
               required
