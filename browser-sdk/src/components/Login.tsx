@@ -1,51 +1,58 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ConnextSDK from "..";
 
+import {
+  LOGIN_PENDING,
+  LOGIN_SETUP,
+  LOGIN_SUCCESS,
+  LOGIN_FAILURE,
+  LOGIN_PROMPT,
+  LOGIN_SUBMIT,
+} from "../constants";
+
 interface ILoginProps {
-  sdkInstance: ConnextSDK;
+  sdk: ConnextSDK;
   stage: string;
-  onSubmit: (value?: any) => void;
 }
 
-function Login({ sdkInstance, stage, onSubmit }: ILoginProps) {
+function Login({ sdk, stage }: ILoginProps) {
   const [email, setEmail] = useState("");
 
   const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!e.currentTarget.checkValidity()) {
-      console.error("Invalid email!");
+      console.error(sdk.text.error.invalid_email);
       return;
     }
-
-    onSubmit({ email });
+    sdk.emit(LOGIN_SUBMIT, { email });
   };
 
   return (
     <div className="flex-column">
-      {stage === "authenticating" ? (
-        <h3>Check your email for a login link!</h3>
-      ) : stage === "initializing_connext" ? (
-        <h3>Setting up Connext...</h3>
-      ) : stage === "success" ? (
-        <h3>Login successful!</h3>
-      ) : stage === "failure" ? (
-        <h3>Login failed - try again!</h3>
-      ) : stage === "choose_user" ? (
+      {stage === LOGIN_PENDING ? (
+        <h3>{sdk.text.info.login_pending}</h3>
+      ) : stage === LOGIN_SETUP ? (
+        <h3>{sdk.text.info.login_setup}</h3>
+      ) : stage === LOGIN_SUCCESS ? (
+        <h3>{sdk.text.info.login_success}</h3>
+      ) : stage === LOGIN_FAILURE ? (
+        <h3>{sdk.text.info.login_failure}</h3>
+      ) : stage === LOGIN_PROMPT ? (
         <>
           <form onSubmit={onFormSubmit}>
-            <h3>Please enter your email to login.</h3>
+            <h3>{sdk.text.info.login_failure}</h3>
             <input
               required
               type="email"
-              placeholder="Enter your email"
+              placeholder={sdk.text.label.email_address}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <button type="submit">Send me a login link!</button>
+            <button type="submit">{sdk.text.info.login_prompt}</button>
           </form>
         </>
       ) : (
-        <h3>Connext</h3>
+        <h3>{`Connext`}</h3>
       )}
     </div>
   );

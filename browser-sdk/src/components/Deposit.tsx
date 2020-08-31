@@ -1,30 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import QRCode from "react-qr-code";
-import { BigNumber } from "ethers";
 
-import { MULTISIG_BALANCE_PRE_DEPOSIT } from "../constants";
+import { DEPOSIT_SHOW_QR, DEPOSIT_SUCCESS } from "../constants";
 import ConnextSDK from "..";
 
 interface IDepositProps {
-  sdkInstance: ConnextSDK;
+  sdk: ConnextSDK;
   stage: string;
-  depositAddress: string;
 }
 
-function Deposit({ sdkInstance, stage, depositAddress }: IDepositProps) {
-  if (typeof sdkInstance.channel === "undefined") {
-    throw new Error("Missing channel instance");
+function Deposit({ sdk, stage }: IDepositProps) {
+  if (typeof sdk.channel === "undefined") {
+    throw new Error(sdk.text.error.missing_channel);
   }
+  const depositAddress = sdk.channel.multisigAddress;
   return (
     <div className="flex-column">
-      {stage === "show_qr" ? (
+      {stage === DEPOSIT_SHOW_QR ? (
         <>
-          <h3>Please deposit to the following address.</h3>
+          <h3>{sdk.text.info.deposit_show_qr}</h3>
           <QRCode value={depositAddress} />
           <input type="text" value={depositAddress} readOnly />
         </>
-      ) : stage === "deposit_success" ? (
-        <h3>Deposit success!</h3>
+      ) : stage === DEPOSIT_SUCCESS ? (
+        <h3>{sdk.text.info.deposit_success}</h3>
       ) : null}
     </div>
   );

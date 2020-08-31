@@ -1,6 +1,7 @@
 import { addressBook } from "@connext/contracts";
 
-import { ConnextSDKOptions } from "../typings";
+import Languages from "../i18n";
+import { ConnextSDKOptions, LanguageText } from "../typings";
 import {
   DEFAULT_NETWORK,
   CONFIG_OPTIONS,
@@ -107,3 +108,8 @@ export const getSdkOptions = (
     ...overrideOpts,
   };
 };
+
+export function getText(): LanguageText {
+  const lang = window.navigator.language.split("-")[0] || "en";
+  return Languages[lang] || Languages["en"];
+}

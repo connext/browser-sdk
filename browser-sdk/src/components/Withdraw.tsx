@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import { toWad } from "@connext/utils";
 
 import { isValidAddress } from "../helpers";
+import {
+  WITHDRAW_SUCCESS,
+  WITHDRAW_FAILURE,
+  WITHDRAW_PROMPT,
+  WITHDRAW_SUBMIT,
+} from "../constants";
 import ConnextSDK from "..";
 
 interface IWithdrawProps {
-  sdkInstance: ConnextSDK;
+  sdk: ConnextSDK;
   stage: string;
-  onSubmit: (value?: any) => void;
 }
 
-function Withdraw({ sdkInstance, stage, onSubmit }: IWithdrawProps) {
+function Withdraw({ sdk, stage }: IWithdrawProps) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
 
@@ -21,8 +25,8 @@ function Withdraw({ sdkInstance, stage, onSubmit }: IWithdrawProps) {
     ) as HTMLInputElement;
 
     if (!isValidAddress(recipient)) {
-      console.error("Invalid address!");
-      recipientRef?.setCustomValidity("Please enter a valid address");
+      console.error(sdk.text.error.invalid_address);
+      recipientRef?.setCustomValidity(sdk.text.warn.enter_valid_address);
       recipientRef?.reportValidity();
       return;
     } else {
@@ -31,25 +35,25 @@ function Withdraw({ sdkInstance, stage, onSubmit }: IWithdrawProps) {
     }
 
     if (!e.currentTarget.checkValidity()) {
-      console.error("Invalid amount!");
+      console.error(sdk.text.error.invalid_amount);
       return;
     }
-    onSubmit({ recipient, amount });
+    sdk.emit(WITHDRAW_SUBMIT, { recipient, amount });
   };
   // TODO: cancel button
   return (
     <div className="flex-column">
-      {stage === "success" ? (
-        <h3>Withdraw successful!</h3>
-      ) : stage === "failure" ? (
-        <h3>Withdraw failed - try again!</h3>
-      ) : stage === "choose_recipient" ? (
+      {stage === WITHDRAW_SUCCESS ? (
+        <h3>{sdk.text.info.withdraw_success}</h3>
+      ) : stage === WITHDRAW_FAILURE ? (
+        <h3>{sdk.text.info.withdraw_failure}</h3>
+      ) : stage === WITHDRAW_PROMPT ? (
         <form onSubmit={withdraw}>
-          <h3>Please enter amount to withdraw and recipient.</h3>
+          <h3>{sdk.text.info.withdraw_prompt}</h3>
           <input
             required
             type="number"
-            placeholder="Token Amount"
+            placeholder={sdk.text.label.token_amount}
             value={amount}
             step="any"
             onChange={(e) => setAmount(e.target.value)}
@@ -57,11 +61,11 @@ function Withdraw({ sdkInstance, stage, onSubmit }: IWithdrawProps) {
           <input
             required
             name="recipient"
-            placeholder="Ethereum address"
+            placeholder={sdk.text.label.ethereum_address}
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
           />
-          <button type="submit">Withdraw</button>
+          <button type="submit">{sdk.text.action.withdraw}</button>
         </form>
       ) : null}
     </div>

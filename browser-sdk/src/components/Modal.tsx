@@ -5,22 +5,14 @@ import Login from "./Login";
 import ConnextSDK from "..";
 
 interface IProps {
-  sdkInstance: ConnextSDK;
-}
-
-interface IViewProps {
-  stage: string;
-  onSubmit: (value?: any) => void;
+  sdk: ConnextSDK;
 }
 
 interface IState {
   mode: string;
-  loginProps: IViewProps;
-  depositProps: {
-    stage: string;
-    depositAddress: string;
-  };
-  withdrawProps: IViewProps;
+  loginStage: string;
+  depositStage: string;
+  withdrawStage: string;
 }
 
 class Modal extends React.Component<IProps, IState> {
@@ -28,46 +20,21 @@ class Modal extends React.Component<IProps, IState> {
     super(props);
     this.state = {
       mode: "",
-      loginProps: {
-        stage: "",
-        onSubmit: () => {},
-      },
-      depositProps: {
-        stage: "",
-        depositAddress: "",
-      },
-      withdrawProps: {
-        stage: "",
-        onSubmit: () => {},
-      },
+      loginStage: "",
+      depositStage: "",
+      withdrawStage: "",
     };
   }
 
   renderView() {
     switch (this.state.mode) {
       case "LOGIN":
-        return (
-          <Login
-            sdkInstance={this.props.sdkInstance}
-            stage={this.state.loginProps.stage}
-            onSubmit={this.state.loginProps.onSubmit}
-          />
-        );
+        return <Login sdk={this.props.sdk} stage={this.state.loginStage} />;
       case "DEPOSIT":
-        return (
-          <Deposit
-            sdkInstance={this.props.sdkInstance}
-            stage={this.state.depositProps.stage}
-            depositAddress={this.state.depositProps.depositAddress}
-          />
-        );
+        return <Deposit sdk={this.props.sdk} stage={this.state.depositStage} />;
       case "WITHDRAW":
         return (
-          <Withdraw
-            sdkInstance={this.props.sdkInstance}
-            stage={this.state.withdrawProps.stage}
-            onSubmit={this.state.withdrawProps.onSubmit}
-          />
+          <Withdraw sdk={this.props.sdk} stage={this.state.withdrawStage} />
         );
       default:
         return null;
@@ -77,41 +44,23 @@ class Modal extends React.Component<IProps, IState> {
   render() {
     return <div id="connext-overlay-modal">{this.renderView()}</div>;
   }
-  async displayLogin(onSubmit: (value?: any) => void) {
-    this.setState({
-      mode: "LOGIN",
-      loginProps: { ...this.state.loginProps, onSubmit },
-    });
+  async displayLogin() {
+    this.setState({ mode: "LOGIN" });
   }
   async setLoginStage(stage: string) {
-    this.setState({
-      mode: "LOGIN",
-      loginProps: { ...this.state.loginProps, stage },
-    });
+    this.setState({ loginStage: stage });
   }
-  async displayDeposit(depositAddress) {
-    this.setState({
-      mode: "DEPOSIT",
-      depositProps: { ...this.state.depositProps, depositAddress },
-    });
+  async displayDeposit() {
+    this.setState({ mode: "DEPOSIT" });
   }
   async setDepositStage(stage: string) {
-    this.setState({
-      mode: "DEPOSIT",
-      depositProps: { ...this.state.depositProps, stage },
-    });
+    this.setState({ depositStage: stage });
   }
-  async displayWithdraw(onSubmit: (value?: any) => void) {
-    this.setState({
-      mode: "WITHDRAW",
-      withdrawProps: { ...this.state.withdrawProps, onSubmit },
-    });
+  async displayWithdraw() {
+    this.setState({ mode: "WITHDRAW" });
   }
   async setWithdrawStage(stage: string) {
-    this.setState({
-      mode: "WITHDRAW",
-      withdrawProps: { ...this.state.withdrawProps, stage },
-    });
+    this.setState({ withdrawStage: stage });
   }
 }
 
