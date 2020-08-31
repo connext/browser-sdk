@@ -341,7 +341,7 @@ class ConnextSDK extends EventEmitter {
       typeof this.modal === "undefined" ||
       typeof this.channel === "undefined"
     ) {
-      throw new Error(this.text.error.missing_channel);
+      throw new Error(this.text.error.not_logged_in);
     }
     window.localStorage.removeItem(constants.MULTISIG_BALANCE_PRE_DEPOSIT);
     await this.unsubscribeToDeposit();
