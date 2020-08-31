@@ -31,7 +31,7 @@ const en: LanguageText = {
     login_success: "Login successful!",
     login_failure: "Login failed - try again!",
     login_prompt: "Please enter your email to login.",
-    deposit_success: "Deposit success!",
+    deposit_success: "Deposit successful!",
     deposit_show_qr: "Please deposit to the following address.",
   },
 };
