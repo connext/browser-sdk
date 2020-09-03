@@ -40,7 +40,6 @@ function Withdraw({ sdk, stage }: IWithdrawProps) {
     }
     sdk.emit(WITHDRAW_SUBMIT, { recipient, amount });
   };
-  // TODO: cancel button
   return (
     <div className="flex-column">
       {stage === WITHDRAW_SUCCESS ? (

@@ -14,30 +14,34 @@ import {
   isIframe,
   renderElement,
   getSdkOptions,
-  getFreeBalanceOnChain,
   IframeChannelProvider,
   getText,
+  getEthAssetId,
 } from "./helpers";
 import { ConnextSDKOptions, ConnextTransaction, LanguageText } from "./typings";
+import DepositController from "./deposit";
 
 class ConnextSDK extends EventEmitter {
-  public assetId: string;
+  public text: LanguageText;
+  public tokenAddress: string;
   public ethProviderUrl: string;
   public nodeUrl: string;
-  public text: LanguageText;
+
+  public modal: Modal | undefined;
   public channel: IConnextClient | undefined;
-  private channelProvider: ChannelProvider | IframeChannelProvider;
+
   private magic: Magic | undefined;
-  private modal: Modal | undefined;
+  private channelProvider: ChannelProvider | IframeChannelProvider;
+  private depositController: DepositController;
 
   constructor(
     opts?: string | Partial<ConnextSDKOptions>,
     overrideOpts?: Partial<ConnextSDKOptions>
   ) {
     super();
-    this.text = getText();
     const options = getSdkOptions(opts, overrideOpts);
-    this.assetId = options.assetId;
+    this.text = getText(options.language);
+    this.tokenAddress = options.tokenAddress;
     this.ethProviderUrl = options.ethProviderUrl;
     this.nodeUrl = options.nodeUrl;
     this.magic = new Magic(options.magicKey, {
@@ -49,6 +53,7 @@ class ConnextSDK extends EventEmitter {
         src: options.iframeSrc,
         id: constants.CONNEXT_IFRAME_ID,
       });
+    this.depositController = new DepositController(this);
   }
 
   get publicIdentifier(): string {
@@ -119,9 +124,12 @@ class ConnextSDK extends EventEmitter {
     this.modal.displayDeposit();
     this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
     this.channel.requestDepositRights({
-      assetId: this.assetId,
+      assetId: getEthAssetId(),
     });
-    await this.subscribeToDeposit();
+    this.channel.requestDepositRights({
+      assetId: this.tokenAddress,
+    });
+    await this.depositController.subscribeToDeposit();
     return new Promise((resolve) => {
       this.on(constants.DEPOSIT_SUCCESS, () => resolve());
     });
@@ -148,7 +156,7 @@ class ConnextSDK extends EventEmitter {
           await this.channel.withdraw({
             recipient,
             amount: toWad(amount),
-            assetId: this.assetId,
+            assetId: this.tokenAddress,
           });
         } catch (error) {
           console.error(error);
@@ -166,7 +174,7 @@ class ConnextSDK extends EventEmitter {
     if (typeof this.channel === "undefined") {
       throw new Error(this.text.error.not_logged_in);
     }
-    const result = await this.channel.getFreeBalance(this.assetId);
+    const result = await this.channel.getFreeBalance(this.tokenAddress);
     return fromWad(result[this.channel.signerAddress]);
   }
 
@@ -178,7 +186,7 @@ class ConnextSDK extends EventEmitter {
       await this.channel.transfer({
         recipient,
         amount: toWad(amount),
-        assetId: this.assetId,
+        assetId: this.tokenAddress,
       });
       return true;
     } catch (error) {
@@ -218,9 +226,14 @@ class ConnextSDK extends EventEmitter {
       throw new Error(this.text.error.missing_modal);
     }
     this.modal.setLoginStage(constants.LOGIN_SETUP);
-    await this.authenticateChannelProvider(); // TODO: handle errors
-    this.modal.setLoginStage(constants.LOGIN_SUCCESS);
-    this.checkDepositSubscription();
+    try {
+      await this.authenticateChannelProvider();
+      this.modal.setLoginStage(constants.LOGIN_SUCCESS);
+      this.depositController.checkDepositSubscription();
+    } catch (e) {
+      this.modal.setLoginStage(constants.LOGIN_FAILURE);
+      console.error(e);
+    }
   }
 
   private async authenticateChannelProvider() {
@@ -272,82 +285,6 @@ class ConnextSDK extends EventEmitter {
       ethProviderUrl: this.ethProviderUrl,
       channelProvider: this.channelProvider,
     });
-  }
-
-  private async getOnChainBalance() {
-    if (typeof this.channel === "undefined") {
-      throw new Error(this.text.error.not_logged_in);
-    }
-    const balance = await getFreeBalanceOnChain(
-      this.channel.multisigAddress,
-      this.channel.ethProvider,
-      this.assetId
-    );
-    return balance;
-  }
-
-  private async checkDepositSubscription() {
-    const preDepositBalance = window.localStorage.getItem(
-      constants.MULTISIG_BALANCE_PRE_DEPOSIT
-    );
-    if (preDepositBalance) {
-      const balance = await this.getOnChainBalance();
-      if (BigNumber.from(balance).gt(BigNumber.from(preDepositBalance))) {
-        await this.onDepositSuccess();
-      } else {
-        await this.subscribeToDeposit();
-      }
-    }
-  }
-
-  private async subscribeToDeposit() {
-    if (typeof this.channel === "undefined") {
-      throw new Error(this.text.error.missing_channel);
-    }
-    const preDepositBalance = await this.getOnChainBalance();
-    window.localStorage.setItem(
-      constants.MULTISIG_BALANCE_PRE_DEPOSIT,
-      preDepositBalance
-    );
-    this.channel.ethProvider.on("block", this.onNewBlock.bind(this));
-  }
-
-  private async unsubscribeToDeposit() {
-    if (typeof this.channel === "undefined") {
-      throw new Error(this.text.error.missing_channel);
-    }
-    this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
-  }
-
-  private async onNewBlock() {
-    if (typeof this.channel === "undefined") {
-      throw new Error(this.text.error.missing_channel);
-    }
-    this.channel.ethProvider.off("block", this.onNewBlock.bind(this));
-    const preDepositBalance = window.localStorage.getItem(
-      constants.MULTISIG_BALANCE_PRE_DEPOSIT
-    );
-    if (preDepositBalance === null) {
-      return this.unsubscribeToDeposit();
-    }
-    const balance = await this.getOnChainBalance();
-    if (BigNumber.from(balance).gt(BigNumber.from(preDepositBalance))) {
-      await this.onDepositSuccess();
-    }
-  }
-
-  private async onDepositSuccess() {
-    if (
-      typeof this.modal === "undefined" ||
-      typeof this.channel === "undefined"
-    ) {
-      throw new Error(this.text.error.not_logged_in);
-    }
-    window.localStorage.removeItem(constants.MULTISIG_BALANCE_PRE_DEPOSIT);
-    await this.unsubscribeToDeposit();
-    this.channel.rescindDepositRights({ assetId: this.assetId });
-    this.emit(constants.DEPOSIT_SUCCESS);
-    this.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
   }
 
   private async renderModal() {

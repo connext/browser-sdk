@@ -1,19 +1,25 @@
 import { ChannelProvider } from "@connext/channel-provider";
 
 export interface ConnextSDKOptions {
-  assetId: string;
+  tokenAddress: string;
   nodeUrl: string;
   ethProviderUrl: string;
   iframeSrc: string;
   magicKey: string;
-  channelProvider?: ChannelProvider;
   logLevel: number;
+  language?: string;
+  channelProvider?: ChannelProvider;
 }
 
 export interface ConnextTransaction {
   recipient: string;
   amount: string;
   timestamp: Date;
+}
+
+export interface PreDepositBalance {
+  tokenBalance: string;
+  ethBalance: string;
 }
 
 export interface IframeOptions {

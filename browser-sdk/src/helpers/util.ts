@@ -92,7 +92,7 @@ export const getSdkOptions = (
     typeof opts === "string" ? getNetworkName(opts) : DEFAULT_NETWORK;
   let options: ConnextSDKOptions = {
     logLevel: 0,
-    assetId: addressBook[getChainId(network)].Token.address,
+    tokenAddress: addressBook[getChainId(network)].Token.address,
     iframeSrc: DEFAULT_IFRAME_SRC,
     magicKey: DEFAULT_MAGIC_KEY,
     ...getUrlOptions(network),
@@ -109,7 +109,23 @@ export const getSdkOptions = (
   };
 };
 
-export function getText(): LanguageText {
-  const lang = window.navigator.language.split("-")[0] || "en";
+export function getText(_lang?: string): LanguageText {
+  const lang = _lang || window.navigator.language.split("-")[0] || "en";
   return Languages[lang] || Languages["en"];
+}
+
+export function safeJsonParse(value: any): any {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+export function safeJsonStringify(value: any): string {
+  return typeof value === "string"
+    ? value
+    : JSON.stringify(value, (key: string, value: any) =>
+        typeof value === "undefined" ? null : value
+      );
 }
