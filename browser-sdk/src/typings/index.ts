@@ -59,6 +59,7 @@ export interface LanguageText {
     login_failure: string;
     login_prompt: string;
     deposit_success: string;
+    deposit_failure: string;
     deposit_show_qr: string;
   };
 }

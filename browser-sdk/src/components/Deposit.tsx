@@ -1,7 +1,11 @@
 import React from "react";
 import QRCode from "react-qr-code";
 
-import { DEPOSIT_SHOW_QR, DEPOSIT_SUCCESS } from "../constants";
+import {
+  DEPOSIT_SHOW_QR,
+  DEPOSIT_SUCCESS,
+  DEPOSIT_FAILURE,
+} from "../constants";
 import ConnextSDK from "..";
 
 interface IDepositProps {
@@ -24,6 +28,8 @@ function Deposit({ sdk, stage }: IDepositProps) {
         </>
       ) : stage === DEPOSIT_SUCCESS ? (
         <h3>{sdk.text.info.deposit_success}</h3>
+      ) : stage === DEPOSIT_FAILURE ? (
+        <h3>{sdk.text.info.deposit_failure}</h3>
       ) : null}
     </div>
   );

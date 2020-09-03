@@ -32,6 +32,7 @@ const en: LanguageText = {
     login_failure: "Login failed - try again!",
     login_prompt: "Please enter your email to login.",
     deposit_success: "Deposit successful!",
+    deposit_failure: "Deposit failed - try again!",
     deposit_show_qr: "Please deposit to the following address.",
   },
 };

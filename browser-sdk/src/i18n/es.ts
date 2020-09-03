@@ -34,6 +34,7 @@ const en: LanguageText = {
     login_failure: "Inicio de sesión fallido - inténtalo de nuevo!",
     login_prompt: "Ingrese su correo electrónico para iniciar sesión.",
     deposit_success: "Depósito exitoso!",
+    deposit_failure: "Depósito fallido - inténtalo de nuevo!",
     deposit_show_qr: "Deposite en la siguiente dirección.",
   },
 };

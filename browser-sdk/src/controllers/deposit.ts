@@ -79,22 +79,28 @@ class DepositController {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
     this.removePreDepositBalance();
-    await this.unsubscribeToDeposit();
-    await this.rescindDepositRights();
-    const freeBalanceEth = await this.getEthFreeBalance();
-    if (BigNumber.from(freeBalanceEth).gt(0)) {
-      await this.sdk.channel.swap({
-        fromAssetId: constants.ETH_ASSET_ID,
-        toAssetId: this.sdk.tokenAddress,
-        amount: BigNumber.from(freeBalanceEth),
-        swapRate: await this.sdk.channel.getLatestSwapRate(
-          constants.ETH_ASSET_ID,
-          this.sdk.tokenAddress
-        ),
-      });
+    try {
+      await this.unsubscribeToDeposit();
+      await this.rescindDepositRights();
+      const freeBalanceEth = await this.getEthFreeBalance();
+      if (BigNumber.from(freeBalanceEth).gt(0)) {
+        await this.sdk.channel.swap({
+          fromAssetId: constants.ETH_ASSET_ID,
+          toAssetId: this.sdk.tokenAddress,
+          amount: BigNumber.from(freeBalanceEth),
+          swapRate: await this.sdk.channel.getLatestSwapRate(
+            constants.ETH_ASSET_ID,
+            this.sdk.tokenAddress
+          ),
+        });
+      }
+      this.sdk.emit(constants.DEPOSIT_SUCCESS);
+      this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
+    } catch (e) {
+      console.error(e);
+      this.sdk.emit(constants.DEPOSIT_FAILURE);
+      this.sdk.modal.setDepositStage(constants.DEPOSIT_FAILURE);
     }
-    this.sdk.emit(constants.DEPOSIT_SUCCESS);
-    this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
   }
 
   private async getEthFreeBalance() {
