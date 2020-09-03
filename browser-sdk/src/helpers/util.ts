@@ -69,7 +69,7 @@ export const getUrlOptions = (
       network.toLowerCase() === "mainnet"
         ? "indra.connext.network"
         : network.toLowerCase() === "rinkeby"
-        ? "rinkeby.indra.connext.network"
+        ? "staging.indra.connext.network"
         : null;
     if (!baseUrl) {
       throw new Error(

@@ -1,4 +1,4 @@
-import { Contract, Signer, providers, utils, constants } from "ethers";
+import { Contract, Signer, providers, utils } from "ethers";
 
 const tokenAbi = [
   "function decimals() public view returns (uint8)",
@@ -21,10 +21,6 @@ export const isValidAddress = (address?: string) => {
   }
 };
 
-export function getEthAssetId() {
-  return constants.AddressZero;
-}
-
 export async function getEthBalance(
   address: string,
   ethProvider: providers.Provider | Signer
@@ -38,9 +34,15 @@ export async function getTokenDecimals(
   ethProvider: providers.Provider | Signer,
   assetId: string
 ): Promise<number> {
-  return (
-    await new Contract(assetId, tokenAbi, ethProvider).functions.decimals()
-  ).toNumber();
+  let decimals = 18;
+  try {
+    decimals = (
+      await new Contract(assetId, tokenAbi, ethProvider).functions.decimals()
+    ).toNumber();
+  } catch (e) {
+    // do nothing
+  }
+  return decimals;
 }
 
 export async function getTokenBalance(

@@ -3,27 +3,28 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
 import { ChannelProvider } from "@connext/channel-provider";
-import { BigNumber, utils } from "ethers";
+import { utils } from "ethers";
 import * as connext from "@connext/client";
 import { toWad, fromWad } from "@connext/utils";
 import { IConnextClient } from "@connext/types";
 
 import Modal from "./components/Modal";
 import * as constants from "./constants";
+import { ConnextSDKOptions, ConnextTransaction, LanguageText } from "./typings";
+import DepositController from "./controllers/deposit";
 import {
   isIframe,
   renderElement,
   getSdkOptions,
   IframeChannelProvider,
   getText,
-  getEthAssetId,
+  getTokenDecimals,
 } from "./helpers";
-import { ConnextSDKOptions, ConnextTransaction, LanguageText } from "./typings";
-import DepositController from "./deposit";
 
 class ConnextSDK extends EventEmitter {
   public text: LanguageText;
   public tokenAddress: string;
+  public tokenDecimals: number = 18;
   public ethProviderUrl: string;
   public nodeUrl: string;
 
@@ -123,12 +124,7 @@ class ConnextSDK extends EventEmitter {
     }
     this.modal.displayDeposit();
     this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
-    this.channel.requestDepositRights({
-      assetId: getEthAssetId(),
-    });
-    this.channel.requestDepositRights({
-      assetId: this.tokenAddress,
-    });
+    await this.depositController.requestDepositRights();
     await this.depositController.subscribeToDeposit();
     return new Promise((resolve) => {
       this.on(constants.DEPOSIT_SUCCESS, () => resolve());
@@ -155,7 +151,7 @@ class ConnextSDK extends EventEmitter {
           }
           await this.channel.withdraw({
             recipient,
-            amount: toWad(amount),
+            amount: toWad(amount, this.tokenDecimals),
             assetId: this.tokenAddress,
           });
         } catch (error) {
@@ -175,7 +171,7 @@ class ConnextSDK extends EventEmitter {
       throw new Error(this.text.error.not_logged_in);
     }
     const result = await this.channel.getFreeBalance(this.tokenAddress);
-    return fromWad(result[this.channel.signerAddress]);
+    return fromWad(result[this.channel.signerAddress], this.tokenDecimals);
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
@@ -185,7 +181,7 @@ class ConnextSDK extends EventEmitter {
     try {
       await this.channel.transfer({
         recipient,
-        amount: toWad(amount),
+        amount: toWad(amount, this.tokenDecimals),
         assetId: this.tokenAddress,
       });
       return true;
@@ -285,6 +281,10 @@ class ConnextSDK extends EventEmitter {
       ethProviderUrl: this.ethProviderUrl,
       channelProvider: this.channelProvider,
     });
+    this.tokenDecimals = await getTokenDecimals(
+      this.channel.ethProvider,
+      this.tokenAddress
+    );
   }
 
   private async renderModal() {
@@ -311,6 +311,7 @@ class ConnextSDK extends EventEmitter {
   }
 
   private async reset() {
+    this.tokenDecimals = 18;
     this.channel = undefined;
     this.modal = undefined;
   }
