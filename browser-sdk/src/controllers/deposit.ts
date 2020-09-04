@@ -9,7 +9,6 @@ import {
 } from "../helpers";
 import { PreDepositBalance } from "../typings";
 import ConnextSDK from "..";
-import { ETH_ASSET_ID } from "../constants";
 
 class DepositController {
   constructor(private sdk: ConnextSDK) {
@@ -31,9 +30,9 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
-    await this.sdk.channel.requestDepositRights({
-      assetId: constants.ETH_ASSET_ID,
-    });
+    // await this.sdk.channel.requestDepositRights({
+    //   assetId: constants.ETH_ASSET_ID,
+    // });
     await this.sdk.channel.requestDepositRights({
       assetId: this.sdk.tokenAddress,
     });
@@ -43,9 +42,9 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
-    await this.sdk.channel.rescindDepositRights({
-      assetId: constants.ETH_ASSET_ID,
-    });
+    // await this.sdk.channel.rescindDepositRights({
+    //   assetId: constants.ETH_ASSET_ID,
+    // });
     await this.sdk.channel.rescindDepositRights({
       assetId: this.sdk.tokenAddress,
     });
@@ -82,18 +81,18 @@ class DepositController {
     try {
       await this.unsubscribeToDeposit();
       await this.rescindDepositRights();
-      const freeBalanceEth = await this.getEthFreeBalance();
-      if (freeBalanceEth.gt(BigNumber.from(0))) {
-        await this.sdk.channel.swap({
-          fromAssetId: constants.ETH_ASSET_ID,
-          toAssetId: this.sdk.tokenAddress,
-          amount: freeBalanceEth,
-          swapRate: await this.sdk.channel.getLatestSwapRate(
-            constants.ETH_ASSET_ID,
-            this.sdk.tokenAddress
-          ),
-        });
-      }
+      // const freeBalanceEth = await this.getEthFreeBalance();
+      // if (freeBalanceEth.gt(BigNumber.from(0))) {
+      //   await this.sdk.channel.swap({
+      //     fromAssetId: constants.ETH_ASSET_ID,
+      //     toAssetId: this.sdk.tokenAddress,
+      //     amount: freeBalanceEth,
+      //     swapRate: await this.sdk.channel.getLatestSwapRate(
+      //       constants.ETH_ASSET_ID,
+      //       this.sdk.tokenAddress
+      //     ),
+      //   });
+      // }
       this.sdk.emit(constants.DEPOSIT_SUCCESS);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
     } catch (e) {
@@ -103,15 +102,15 @@ class DepositController {
     }
   }
 
-  private async getEthFreeBalance() {
-    if (typeof this.sdk.channel === "undefined") {
-      throw new Error(this.sdk.text.error.not_logged_in);
-    }
-    const result = await this.sdk.channel.getFreeBalance(
-      constants.ETH_ASSET_ID
-    );
-    return BigNumber.from(result[this.sdk.channel.signerAddress]);
-  }
+  // private async getEthFreeBalance() {
+  //   if (typeof this.sdk.channel === "undefined") {
+  //     throw new Error(this.sdk.text.error.not_logged_in);
+  //   }
+  //   const result = await this.sdk.channel.getFreeBalance(
+  //     constants.ETH_ASSET_ID
+  //   );
+  //   return BigNumber.from(result[this.sdk.channel.signerAddress]);
+  // }
 
   private async getOnChainTokenBalance() {
     if (typeof this.sdk.channel === "undefined") {
@@ -151,15 +150,13 @@ class DepositController {
   }
   private async assertBalanceIncrease(preDepositBalance: PreDepositBalance) {
     const tokenBalance = await this.getOnChainTokenBalance();
-    const ethBalance = await this.getOnChainEthBalance();
-    return (
-      BigNumber.from(tokenBalance).gt(
-        BigNumber.from(preDepositBalance.tokenBalance)
-      ) ||
-      BigNumber.from(ethBalance).gt(
-        BigNumber.from(preDepositBalance.ethBalance)
-      )
+    // const ethBalance = await this.getOnChainEthBalance();
+    return BigNumber.from(tokenBalance).gt(
+      BigNumber.from(preDepositBalance.tokenBalance)
     );
+    // BigNumber.from(ethBalance).gt(
+    //   BigNumber.from(preDepositBalance.ethBalance)
+    // )
   }
 
   private setPreDepositBalance(preDepositBalance: PreDepositBalance): void {
