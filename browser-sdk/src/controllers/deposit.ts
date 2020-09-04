@@ -152,13 +152,6 @@ class DepositController {
   private async assertBalanceIncrease(preDepositBalance: PreDepositBalance) {
     const tokenBalance = await this.getOnChainTokenBalance();
     const ethBalance = await this.getOnChainEthBalance();
-    console.log("tokenBalance", tokenBalance);
-    console.log(
-      "preDepositBalance.tokenBalance",
-      preDepositBalance.tokenBalance
-    );
-    console.log("ethBalance", ethBalance);
-    console.log("preDepositBalance.ethBalance", preDepositBalance.ethBalance);
     return (
       BigNumber.from(tokenBalance).gt(
         BigNumber.from(preDepositBalance.tokenBalance)
