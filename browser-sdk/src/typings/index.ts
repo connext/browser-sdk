@@ -36,6 +36,7 @@ export interface LanguageText {
     invalid_address: string;
     invalid_amount: string;
     invalid_email: string;
+    awaiting_deposit: string;
   };
   label: {
     token_amount: string;

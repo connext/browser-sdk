@@ -9,7 +9,7 @@ const en: LanguageText = {
     invalid_address: "Invalid address!",
     invalid_amount: "Invalid amount!",
     invalid_email: "Invalid email!",
-    awaiting_deposit: "Waiting for deposit!",
+    awaiting_deposit: "Awaiting for deposit!",
   },
   label: {
     token_amount: "Token Amount",
