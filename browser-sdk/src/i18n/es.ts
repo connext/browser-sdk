@@ -9,6 +9,7 @@ const en: LanguageText = {
     invalid_address: "Dirección inválida!",
     invalid_amount: "Cantidad inválida!",
     invalid_email: "Correo electrónico invalido!",
+    awaiting_deposit: "Esperando por depósito!",
   },
   label: {
     token_amount: "Cantidad de Token",

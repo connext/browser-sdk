@@ -122,6 +122,9 @@ class ConnextSDK extends EventEmitter {
     ) {
       throw new Error(this.text.error.not_logged_in);
     }
+    if (this.depositController.subscribed) {
+      throw new Error(this.text.error.awaiting_deposit);
+    }
     this.modal.displayDeposit();
     this.modal.setDepositStage(constants.DEPOSIT_PENDING);
     await this.depositController.requestDepositRights();
@@ -137,6 +140,9 @@ class ConnextSDK extends EventEmitter {
     return new Promise((resolve, reject) => {
       if (typeof this.modal === "undefined") {
         throw new Error(this.text.error.not_logged_in);
+      }
+      if (this.depositController.subscribed) {
+        throw new Error(this.text.error.awaiting_deposit);
       }
       this.modal.displayWithdraw();
       this.modal.setWithdrawStage(constants.WITHDRAW_PROMPT);
@@ -178,6 +184,9 @@ class ConnextSDK extends EventEmitter {
   public async transfer(recipient: string, amount: string): Promise<boolean> {
     if (typeof this.channel === "undefined") {
       throw new Error(this.text.error.not_logged_in);
+    }
+    if (this.depositController.subscribed) {
+      throw new Error(this.text.error.awaiting_deposit);
     }
     try {
       await this.channel.transfer({
@@ -312,6 +321,7 @@ class ConnextSDK extends EventEmitter {
   }
 
   private async reset() {
+    this.depositController.unsubscribeToDeposit();
     this.tokenDecimals = 18;
     this.channel = undefined;
     this.modal = undefined;

@@ -25,6 +25,7 @@ export const CONNEXT_OVERLAY_STYLE = `
     width: 16em;
     padding: 2em;
     border-radius: 0.5em;
+    box-shadow: 2px 12px 12px 6px rgba(0,0,0,0.2);
   }
 
   #connext-overlay #connext-overlay-modal .flex-column {

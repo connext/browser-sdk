@@ -15,6 +15,10 @@ class DepositController {
     this.sdk = sdk;
   }
 
+  get subscribed(): boolean {
+    return !!this.getPreDepositBalance();
+  }
+
   public async checkDepositSubscription() {
     const preDepositBalance = this.getPreDepositBalance();
     if (preDepositBalance) {
