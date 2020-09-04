@@ -1,18 +1,11 @@
-import {
-  JsonRpcRequest,
-  ChannelMethods,
-  IChannelProvider,
-} from "@connext/types";
-import { getLocalStore } from "@connext/store";
-import { ChannelSigner, ConsoleLogger, getChainId } from "@connext/utils";
-import { NodeApiClient } from "@connext/client/dist/node";
-
-import { Wallet, utils, providers } from "ethers";
+import { Wallet, utils } from "ethers";
+import * as connext from "@connext/client";
+import { JsonRpcRequest, ChannelMethods, IConnextClient } from "@connext/types";
 
 export default class ConnextManager {
   private parentOrigin: string;
-  private privateKey: string | undefined;
-  private channelProvider: IChannelProvider | undefined;
+  private signer: string | undefined;
+  private channel: IConnextClient | undefined;
 
   constructor() {
     this.parentOrigin = new URL(document.referrer).origin;
@@ -33,32 +26,21 @@ export default class ConnextManager {
     }
   }
 
-  private async initializeChannelProvider(
+  private async initChannel(
     ethProviderUrl: string,
     nodeUrl: string,
     signature: string
-  ): Promise<IChannelProvider> {
+  ): Promise<IConnextClient> {
     // use the entropy of the signature to generate a private key for this wallet
     // since the signature depends on the private key stored by Magic/Metamask, this is not forgeable by an adversary
     const mnemonic = utils.entropyToMnemonic(utils.keccak256(signature));
-    this.privateKey = Wallet.fromMnemonic(mnemonic).privateKey;
-
-    const chainId = await getChainId(ethProviderUrl);
-    const ethProvider = new providers.JsonRpcProvider(ethProviderUrl, chainId);
-    const node = await NodeApiClient.init({
-      ethProvider: ethProvider,
-      chainId: chainId,
-      store: getLocalStore(),
-      // @ts-ignore: messaging is actually optional despite being marked as required in the typescript annotations, see @connext/client/src/node.ts
-      messaging: undefined,
-      logger: new ConsoleLogger("ConnextConnect"),
-      nodeUrl: nodeUrl,
-      signer: new ChannelSigner(this.privateKey, ethProvider),
+    this.signer = Wallet.fromMnemonic(mnemonic).privateKey;
+    this.channel = await connext.connect({
+      signer: this.signer,
+      ethProviderUrl,
+      nodeUrl,
     });
-    if (typeof node.channelProvider === "undefined") {
-      throw new Error("Node ChannelProvider not present!");
-    }
-    return node.channelProvider;
+    return this.channel;
   }
 
   private async handleIncomingMessage(e: MessageEvent) {
@@ -76,19 +58,19 @@ export default class ConnextManager {
 
   private async handleRequest(request: JsonRpcRequest) {
     if (request.method === "connext_authenticate") {
-      this.channelProvider = await this.initializeChannelProvider(
+      await this.initChannel(
         request.params.ethProviderUrl,
         request.params.nodeUrl,
-        request.params.userSecretEntropy
+        request.params.signature
       );
       return { success: true };
     }
-    if (typeof this.channelProvider === "undefined") {
+    if (typeof this.channel === "undefined") {
       throw new Error(
         "Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands"
       );
     }
-    return await this.channelProvider.send(
+    return await this.channel.channelProvider.send(
       request.method as ChannelMethods,
       request.params
     );

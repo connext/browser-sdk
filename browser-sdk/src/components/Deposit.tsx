@@ -3,6 +3,7 @@ import QRCode from "react-qr-code";
 
 import {
   DEPOSIT_SHOW_QR,
+  DEPOSIT_PENDING,
   DEPOSIT_SUCCESS,
   DEPOSIT_FAILURE,
 } from "../constants";
@@ -26,6 +27,8 @@ function Deposit({ sdk, stage }: IDepositProps) {
           <QRCode value={depositAddress} />
           <input type="text" value={depositAddress} readOnly />
         </>
+      ) : stage === DEPOSIT_PENDING ? (
+        <h3>{sdk.text.info.deposit_pending}</h3>
       ) : stage === DEPOSIT_SUCCESS ? (
         <h3>{sdk.text.info.deposit_success}</h3>
       ) : stage === DEPOSIT_FAILURE ? (

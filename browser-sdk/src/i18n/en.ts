@@ -23,17 +23,18 @@ const en: LanguageText = {
     enter_valid_address: "Please enter a valid address",
   },
   info: {
-    withdraw_prompt: "Please enter amount to withdraw and recipient.",
-    withdraw_success: "Withdraw successful!",
-    withdraw_failure: "Withdraw failed - try again!",
     login_pending: "Check your email for a login link!",
     login_setup: "Setting up Connext...",
     login_success: "Login successful!",
     login_failure: "Login failed - try again!",
     login_prompt: "Please enter your email to login.",
+    deposit_pending: "Preparing deposit...",
     deposit_success: "Deposit successful!",
     deposit_failure: "Deposit failed - try again!",
     deposit_show_qr: "Please deposit to the following address.",
+    withdraw_prompt: "Please enter amount to withdraw and recipient.",
+    withdraw_success: "Withdraw successful!",
+    withdraw_failure: "Withdraw failed - try again!",
   },
 };
 

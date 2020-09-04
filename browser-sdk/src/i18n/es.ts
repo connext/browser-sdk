@@ -23,19 +23,20 @@ const en: LanguageText = {
     enter_valid_address: "Por favor, ingrese una dirección válida",
   },
   info: {
-    withdraw_prompt:
-      "Por favor, ingrese la cantidad a retirar y el destinatario.",
-    withdraw_success: "Retiro exitoso!",
-    withdraw_failure: "Retiro fallido - inténtalo de nuevo!",
     login_pending:
       "Revise su correo electrónico para obtener un enlace de inicio de sesión.",
     login_setup: "Configurando Connext...",
     login_success: "Inicio de sesión exitoso!",
     login_failure: "Inicio de sesión fallido - inténtalo de nuevo!",
     login_prompt: "Ingrese su correo electrónico para iniciar sesión.",
+    deposit_pending: "Preparando depósito...",
     deposit_success: "Depósito exitoso!",
     deposit_failure: "Depósito fallido - inténtalo de nuevo!",
     deposit_show_qr: "Deposite en la siguiente dirección.",
+    withdraw_prompt:
+      "Por favor, ingrese la cantidad a retirar y el destinatario.",
+    withdraw_success: "Retiro exitoso!",
+    withdraw_failure: "Retiro fallido - inténtalo de nuevo!",
   },
 };
 

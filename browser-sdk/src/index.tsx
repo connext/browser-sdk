@@ -78,7 +78,7 @@ class ConnextSDK extends EventEmitter {
   }
 
   public loginWithMagic(): Promise<boolean> {
-    return new Promise(async (resolve) => {
+    return new Promise(async (resolve, reject) => {
       if (typeof this.magic === "undefined") {
         throw new Error(this.text.error.missing_magic);
       }
@@ -106,7 +106,7 @@ class ConnextSDK extends EventEmitter {
             await this.authenticate();
           } catch (error) {
             this.modal.setLoginStage(constants.LOGIN_FAILURE);
-            throw error;
+            reject(error);
           }
 
           resolve(true);
@@ -123,16 +123,18 @@ class ConnextSDK extends EventEmitter {
       throw new Error(this.text.error.not_logged_in);
     }
     this.modal.displayDeposit();
-    this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
+    this.modal.setDepositStage(constants.DEPOSIT_PENDING);
     await this.depositController.requestDepositRights();
+    this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
     await this.depositController.subscribeToDeposit();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.on(constants.DEPOSIT_SUCCESS, () => resolve());
+      this.on(constants.DEPOSIT_FAILURE, () => reject());
     });
   }
 
   public async withdraw(): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (typeof this.modal === "undefined") {
         throw new Error(this.text.error.not_logged_in);
       }
@@ -157,8 +159,7 @@ class ConnextSDK extends EventEmitter {
         } catch (error) {
           console.error(error);
           this.modal.setWithdrawStage(constants.WITHDRAW_FAILURE);
-          resolve(false);
-          throw error;
+          reject(error);
         }
         this.modal.setWithdrawStage(constants.WITHDRAW_SUCCESS);
         resolve(true);
@@ -246,7 +247,7 @@ class ConnextSDK extends EventEmitter {
       jsonrpc: "2.0",
       method: "connext_authenticate",
       params: {
-        userSecretEntropy: signature,
+        signature: signature,
         ethProviderUrl: this.ethProviderUrl,
         nodeUrl: this.nodeUrl,
       },
