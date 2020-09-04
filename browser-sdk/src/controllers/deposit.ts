@@ -83,11 +83,11 @@ class DepositController {
       await this.unsubscribeToDeposit();
       await this.rescindDepositRights();
       const freeBalanceEth = await this.getEthFreeBalance();
-      if (BigNumber.from(freeBalanceEth).gt(0)) {
+      if (freeBalanceEth.gt(BigNumber.from(0))) {
         await this.sdk.channel.swap({
           fromAssetId: constants.ETH_ASSET_ID,
           toAssetId: this.sdk.tokenAddress,
-          amount: BigNumber.from(freeBalanceEth),
+          amount: freeBalanceEth,
           swapRate: await this.sdk.channel.getLatestSwapRate(
             constants.ETH_ASSET_ID,
             this.sdk.tokenAddress
@@ -110,7 +110,7 @@ class DepositController {
     const result = await this.sdk.channel.getFreeBalance(
       constants.ETH_ASSET_ID
     );
-    return result[this.sdk.channel.signerAddress];
+    return BigNumber.from(result[this.sdk.channel.signerAddress]);
   }
 
   private async getOnChainTokenBalance() {
