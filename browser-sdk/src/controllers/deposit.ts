@@ -163,7 +163,6 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
     }
-    this.sdk.channel.ethProvider.off("block", this.onNewBlock.bind(this));
     const preDepositBalance = this.getPreDepositBalance();
     if (preDepositBalance === null) {
       return this.unsubscribeToDeposit();
@@ -175,11 +174,13 @@ class DepositController {
   private async assertBalanceIncrease(preDepositBalance: PreDepositBalance) {
     const tokenBalance = await this.getOnChainTokenBalance();
     const ethBalance = await this.getOnChainEthBalance();
-    return BigNumber.from(tokenBalance).gt(
-      BigNumber.from(preDepositBalance.tokenBalance) ||
-        BigNumber.from(ethBalance).gt(
-          BigNumber.from(preDepositBalance.ethBalance)
-        )
+    return (
+      BigNumber.from(tokenBalance).gt(
+        BigNumber.from(preDepositBalance.tokenBalance)
+      ) ||
+      BigNumber.from(ethBalance).gt(
+        BigNumber.from(preDepositBalance.ethBalance)
+      )
     );
   }
 
