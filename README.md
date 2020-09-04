@@ -80,28 +80,28 @@ You can use the SDK with [your own Connext node](https://docs.connext.network/en
 
 ```javascript
 const connext = new ConnextSDK({
-   assetId: "0xabc123..." // Token address (0x0 for Eth)
-   nodeUrl: "https://node.example.com"
-   ethProviderUrl: "https://infura.com/abc123"
-})
+  tokenAddress: "0xabc123...",
+  nodeUrl: "https://node.example.com",
+  ethProviderUrl: "https://infura.com/abc123",
+});
 ```
 
 Note that our bootstrap nodes will not work with custom assets. **If you are using your own token, you will need to run your own Connext node**.
 
 ## API Reference
 
-|         Method          |                     Example                     |                              Description                               |                                                                               Params                                                                                |           Response           |
-| :---------------------: | :---------------------------------------------: | :--------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------: |
-|      instantiation      | `const connext = new ConnextSDK('production');` | Instantiates SDK with provided config (defaulting to `'sandbox'` mode) | Either of: String: `'production'` or: ConfigObject: { `assetId`: token address or 0x0 for Eth `ethProviderUrl`: Ethereum node RPC url `nodeUrl`: Connext node url } |                              |
-|         `login`         |            `await connext.login();`             |                           Opens the login UI                           |                                                                                                                                                                     |                              |
-|   `publicIdentifier`    |     `const id = connext.publicIdentifier;`      |                Gets the user's unique public identifier                |                                                                                                                                                                     | String e.g. `indra123abc...` |
-|        `deposit`        |           `await connext.deposit();`            |                          Opens the deposit UI                          |                                                                                                                                                                     |                              |
-|       `withdraw`        |           `await connext.withdraw();`           |                         Opens the withdraw UI                          |                                                                                                                                                                     |                              |
-|        `balance`        |           `await connext.balance();`            |                        Gets the user's balance                         |                                                                                                                                                                     |    String e.g. `0.12456`     |
-|       `transfer`        |      `await connext.transfer(id, amount);`      |            Sends amount to the specified public identifier             |                                                  - String: public identifier of recipient - String: amount to send                                                  |                              |
-| `getTransactionHistory` |    `await connext.getTransactionHistory();`     |                Gets a history of previous transactions                 |                                                                                                                                                                     |            //TODO            |
+|         Method          |                     Example                     |                              Description                               |                                                                          Params                                                                           |           Response           |
+| :---------------------: | :---------------------------------------------: | :--------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------: |
+|      instantiation      | `const connext = new ConnextSDK('production');` | Instantiates SDK with provided config (defaulting to `'sandbox'` mode) | Either of: String: `'production'` or: ConfigObject: { `tokenAddress`: token address `ethProviderUrl`: Ethereum node RPC url `nodeUrl`: Connext node url } |                              |
+|         `login`         |            `await connext.login();`             |                           Opens the login UI                           |                                                                                                                                                           |                              |
+|   `publicIdentifier`    |     `const id = connext.publicIdentifier;`      |                Gets the user's unique public identifier                |                                                                                                                                                           | String e.g. `indra123abc...` |
+|        `deposit`        |           `await connext.deposit();`            |                          Opens the deposit UI                          |                                                                                                                                                           |                              |
+|       `withdraw`        |           `await connext.withdraw();`           |                         Opens the withdraw UI                          |                                                                                                                                                           |                              |
+|        `balance`        |           `await connext.balance();`            |                        Gets the user's balance                         |                                                                                                                                                           |    String e.g. `0.12456`     |
+|       `transfer`        |      `await connext.transfer(id, amount);`      |            Sends amount to the specified public identifier             |                                             - String: public identifier of recipient - String: amount to send                                             |                              |
+| `getTransactionHistory` |    `await connext.getTransactionHistory();`     |                Gets a history of previous transactions                 |                                                                                                                                                           |            //TODO            |
 |                         |
-|        `logout`         |           `await connext.lougout();`            |                   Logs user out and resets SDK state                   |                                                                                                                                                                     |                              |
+|        `logout`         |           `await connext.lougout();`            |                   Logs user out and resets SDK state                   |                                                                                                                                                           |                              |
 
 ## Development
 
