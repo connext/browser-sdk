@@ -128,8 +128,8 @@ class ConnextSDK extends EventEmitter {
     this.modal.displayDeposit();
     this.modal.setDepositStage(constants.DEPOSIT_PENDING);
     await this.depositController.requestDepositRights();
-    this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
     await this.depositController.subscribeToDeposit();
+    this.modal.setDepositStage(constants.DEPOSIT_SHOW_QR);
     return new Promise((resolve, reject) => {
       this.on(constants.DEPOSIT_SUCCESS, () => resolve());
       this.on(constants.DEPOSIT_FAILURE, () => reject());

@@ -85,18 +85,6 @@ class DepositController {
     try {
       await this.unsubscribeToDeposit();
       await this.rescindDepositRights();
-      // const freeBalanceEth = await this.getEthFreeBalance();
-      // if (freeBalanceEth.gt(BigNumber.from(0))) {
-      //   await this.sdk.channel.swap({
-      //     fromAssetId: constants.ETH_ASSET_ID,
-      //     toAssetId: this.sdk.tokenAddress,
-      //     amount: freeBalanceEth,
-      //     swapRate: await this.sdk.channel.getLatestSwapRate(
-      //       constants.ETH_ASSET_ID,
-      //       this.sdk.tokenAddress
-      //     ),
-      //   });
-      // }
       this.sdk.emit(constants.DEPOSIT_SUCCESS);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
     } catch (e) {
@@ -105,16 +93,6 @@ class DepositController {
       this.sdk.modal.setDepositStage(constants.DEPOSIT_FAILURE);
     }
   }
-
-  // private async getEthFreeBalance() {
-  //   if (typeof this.sdk.channel === "undefined") {
-  //     throw new Error(this.sdk.text.error.not_logged_in);
-  //   }
-  //   const result = await this.sdk.channel.getFreeBalance(
-  //     constants.ETH_ASSET_ID
-  //   );
-  //   return BigNumber.from(result[this.sdk.channel.signerAddress]);
-  // }
 
   private async getOnChainTokenBalance() {
     if (typeof this.sdk.channel === "undefined") {
@@ -143,7 +121,6 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
     }
-    this.sdk.channel.ethProvider.off("block", this.onNewBlock.bind(this));
     const preDepositBalance = this.getPreDepositBalance();
     if (preDepositBalance === null) {
       return this.unsubscribeToDeposit();
@@ -154,13 +131,9 @@ class DepositController {
   }
   private async assertBalanceIncrease(preDepositBalance: PreDepositBalance) {
     const tokenBalance = await this.getOnChainTokenBalance();
-    // const ethBalance = await this.getOnChainEthBalance();
     return BigNumber.from(tokenBalance).gt(
       BigNumber.from(preDepositBalance.tokenBalance)
     );
-    // BigNumber.from(ethBalance).gt(
-    //   BigNumber.from(preDepositBalance.ethBalance)
-    // )
   }
 
   private setPreDepositBalance(preDepositBalance: PreDepositBalance): void {
