@@ -2,6 +2,12 @@ import { Wallet, utils } from "ethers";
 import * as connext from "@connext/client";
 import { JsonRpcRequest, ChannelMethods, IConnextClient } from "@connext/types";
 
+export function payloadId(): number {
+  const date = new Date().getTime() * Math.pow(10, 3);
+  const extra = Math.floor(Math.random() * Math.pow(10, 3));
+  return date + extra;
+}
+
 export default class ConnextManager {
   private parentOrigin: string;
   private signer: string | undefined;
@@ -16,14 +22,15 @@ export default class ConnextManager {
     );
     if (document.readyState === "loading") {
       window.addEventListener("DOMContentLoaded", () => {
-        window.parent.postMessage(
-          "event:iframe-initialized",
-          this.parentOrigin as string
-        );
+        this.post("event:iframe-initialized");
       });
     } else {
-      window.parent.postMessage("event:iframe-initialized", this.parentOrigin);
+      this.post("event:iframe-initialized");
     }
+  }
+
+  private async post(message: string) {
+    window.parent.postMessage(message, this.parentOrigin);
   }
 
   private async initChannel(
@@ -53,7 +60,7 @@ export default class ConnextManager {
     } catch (e) {
       response = { id: request.id, error: { message: e.message } };
     }
-    window.parent.postMessage(JSON.stringify(response), this.parentOrigin);
+    this.post(JSON.stringify(response));
   }
 
   private async handleRequest(request: JsonRpcRequest) {
@@ -69,6 +76,26 @@ export default class ConnextManager {
       throw new Error(
         "Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands"
       );
+    }
+    if (request.method === "chan_subscribe") {
+      const subscription = utils.keccak256(utils.arrayify(`${request.id}`));
+
+      this.channel.on(request.params.event, (data) => {
+        const payload: JsonRpcRequest = {
+          id: payloadId(),
+          jsonrpc: "2.0",
+          method: "chan_subscription",
+          params: {
+            subscription,
+            data,
+          },
+        };
+        this.post(JSON.stringify(payload));
+      });
+      return subscription;
+    } else if (request.method === "chan_unsubscribe") {
+      this.channel.off();
+      return true;
     }
     return await this.channel.channelProvider.send(
       request.method as ChannelMethods,

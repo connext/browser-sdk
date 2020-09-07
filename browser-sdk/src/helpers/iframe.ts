@@ -1,5 +1,10 @@
 import EventEmitter from "eventemitter3";
-import { JsonRpcRequest, IRpcConnection } from "@connext/types";
+import {
+  JsonRpcRequest,
+  IRpcConnection,
+  EventName,
+  MethodName,
+} from "@connext/types";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
@@ -59,6 +64,33 @@ export class IframeRpcConnection
       );
     });
   }
+  public on = (
+    event: string | EventName | MethodName,
+    listener: (...args: any[]) => void
+  ): any => {
+    this.send({
+      method: "chan_subscribe",
+      params: { event },
+    }).then((id) => {
+      this.on(id, listener);
+    });
+  };
+
+  public once = (
+    event: string | EventName | MethodName,
+    listener: (...args: any[]) => void
+  ): any => {
+    this.send({
+      method: "chan_subscribe",
+      params: { event },
+    }).then((id) => {
+      this.once(id, listener);
+    });
+  };
+
+  public removeAllListeners = (): any => {
+    return this.send({ method: "chan_unsuscribe" });
+  };
 
   public render(): Promise<void> {
     if (this.iframe) {
@@ -106,7 +138,11 @@ export class IframeRpcConnection
         this.emit(event);
       } else {
         const payload = JSON.parse(e.data);
-        this.emit(`${payload.id}`, payload);
+        if (payload.method === "chan_subscription") {
+          this.emit(payload.params.subscription, payload.params.data);
+        } else {
+          this.emit(`${payload.id}`, payload);
+        }
       }
     }
   }
