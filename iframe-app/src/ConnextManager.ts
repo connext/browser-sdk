@@ -22,15 +22,14 @@ export default class ConnextManager {
     );
     if (document.readyState === "loading") {
       window.addEventListener("DOMContentLoaded", () => {
-        this.post("event:iframe-initialized");
+        window.parent.postMessage(
+          "event:iframe-initialized",
+          this.parentOrigin
+        );
       });
     } else {
-      this.post("event:iframe-initialized");
+      window.parent.postMessage("event:iframe-initialized", this.parentOrigin);
     }
-  }
-
-  private async post(message: string) {
-    window.parent.postMessage(message, this.parentOrigin);
   }
 
   private async initChannel(
@@ -60,7 +59,7 @@ export default class ConnextManager {
     } catch (e) {
       response = { id: request.id, error: { message: e.message } };
     }
-    this.post(JSON.stringify(response));
+    window.parent.postMessage(JSON.stringify(response), this.parentOrigin);
   }
 
   private async handleRequest(request: JsonRpcRequest) {
@@ -90,7 +89,7 @@ export default class ConnextManager {
             data,
           },
         };
-        this.post(JSON.stringify(payload));
+        window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
       });
       return subscription;
     } else if (request.method === "chan_unsubscribe") {

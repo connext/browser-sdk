@@ -10,6 +10,14 @@ import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
 import { ChannelProvider } from "@connext/channel-provider";
 
+const RpcConnectionEvents = [
+  "open",
+  "close",
+  "connect",
+  "disconnect",
+  "message",
+];
+
 export class IframeRpcConnection
   extends EventEmitter<string>
   implements IRpcConnection {
@@ -68,6 +76,10 @@ export class IframeRpcConnection
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
+    if (!this.connected) return;
+    if (RpcConnectionEvents.includes(event)) {
+      return this.on(event, listener);
+    }
     this.send({
       method: "chan_subscribe",
       params: { event },
@@ -80,6 +92,10 @@ export class IframeRpcConnection
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
+    if (!this.connected) return;
+    if (RpcConnectionEvents.includes(event)) {
+      return this.on(event, listener);
+    }
     this.send({
       method: "chan_subscribe",
       params: { event },
@@ -89,7 +105,8 @@ export class IframeRpcConnection
   };
 
   public removeAllListeners = (): any => {
-    return this.send({ method: "chan_unsuscribe" });
+    if (!this.connected) return;
+    return this.send({ method: "chan_unsubscribe" });
   };
 
   public render(): Promise<void> {
