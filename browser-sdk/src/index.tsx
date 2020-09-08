@@ -6,7 +6,7 @@ import { ChannelProvider } from "@connext/channel-provider";
 import { utils } from "ethers";
 import * as connext from "@connext/client";
 import { toWad, fromWad } from "@connext/utils";
-import { IConnextClient } from "@connext/types";
+import { EventName, IConnextClient } from "@connext/types";
 
 import Modal from "./components/Modal";
 import * as constants from "./constants";
@@ -19,14 +19,16 @@ import {
   IframeChannelProvider,
   getText,
   getTokenDecimals,
+  isEventName,
 } from "./helpers";
 
-class ConnextSDK extends EventEmitter {
+class ConnextSDK {
   public text: LanguageText;
   public tokenAddress: string;
   public tokenDecimals: number = 18;
   public ethProviderUrl: string;
   public nodeUrl: string;
+  public events = new EventEmitter();
 
   public modal: Modal | undefined;
   public channel: IConnextClient | undefined;
@@ -39,7 +41,6 @@ class ConnextSDK extends EventEmitter {
     opts?: string | Partial<ConnextSDKOptions>,
     overrideOpts?: Partial<ConnextSDKOptions>
   ) {
-    super();
     const options = getSdkOptions(opts, overrideOpts);
     this.text = getText(options.language);
     this.tokenAddress = options.tokenAddress;
@@ -219,11 +220,38 @@ class ConnextSDK extends EventEmitter {
       throw new Error(this.text.error.not_logged_in);
     }
     await this.magic.user.logout();
+    await this.channel.off();
     await this.channelProvider.close();
     await this.unrenderModal();
     await this.reset();
     return true;
   }
+
+  public on = (
+    event: string | EventName,
+    listener: (...args: any[]) => void
+  ): any => {
+    if (isEventName(event)) {
+      if (typeof this.channel === "undefined") {
+        throw new Error(this.text.error.not_logged_in);
+      }
+      return this.channel.on(event, listener);
+    }
+    return this.events.on(event, listener);
+  };
+
+  public once = (
+    event: string | EventName,
+    listener: (...args: any[]) => void
+  ): any => {
+    if (isEventName(event)) {
+      if (typeof this.channel === "undefined") {
+        throw new Error(this.text.error.not_logged_in);
+      }
+      return this.channel.once(event, listener);
+    }
+    return this.events.once(event, listener);
+  };
 
   // ---------- Private ----------------------------------------------- //
 
@@ -321,7 +349,8 @@ class ConnextSDK extends EventEmitter {
   }
 
   private async reset() {
-    this.depositController.unsubscribeToDeposit();
+    await this.depositController.unsubscribeToDeposit();
+    this.events.removeAllListeners();
     this.tokenDecimals = 18;
     this.channel = undefined;
     this.modal = undefined;

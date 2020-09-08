@@ -2,6 +2,12 @@ import { Wallet, utils } from "ethers";
 import * as connext from "@connext/client";
 import { JsonRpcRequest, ChannelMethods, IConnextClient } from "@connext/types";
 
+export function payloadId(): number {
+  const date = new Date().getTime() * Math.pow(10, 3);
+  const extra = Math.floor(Math.random() * Math.pow(10, 3));
+  return date + extra;
+}
+
 export default class ConnextManager {
   private parentOrigin: string;
   private signer: string | undefined;
@@ -51,6 +57,7 @@ export default class ConnextManager {
       const result = await this.handleRequest(request);
       response = { id: request.id, result };
     } catch (e) {
+      console.error(e);
       response = { id: request.id, error: { message: e.message } };
     }
     window.parent.postMessage(JSON.stringify(response), this.parentOrigin);
@@ -69,6 +76,31 @@ export default class ConnextManager {
       throw new Error(
         "Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands"
       );
+    }
+    if (request.method === "chan_subscribe") {
+      const subscription = utils.keccak256(utils.toUtf8Bytes(`${request.id}`));
+      const listener = (data: any) => {
+        const payload: JsonRpcRequest = {
+          id: payloadId(),
+          jsonrpc: "2.0",
+          method: "chan_subscription",
+          params: {
+            subscription,
+            data,
+          },
+        };
+        window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
+      };
+      if (request.params.once) {
+        this.channel.channelProvider.once(request.params.event, listener);
+      } else {
+        this.channel.channelProvider.on(request.params.event, listener);
+      }
+      return subscription;
+    }
+    if (request.method === "chan_unsubscribeAll") {
+      this.channel.channelProvider.removeAllListeners();
+      return true;
     }
     return await this.channel.channelProvider.send(
       request.method as ChannelMethods,

@@ -38,7 +38,7 @@ function Withdraw({ sdk, stage }: IWithdrawProps) {
       console.error(sdk.text.error.invalid_amount);
       return;
     }
-    sdk.emit(WITHDRAW_SUBMIT, { recipient, amount });
+    sdk.events.emit(WITHDRAW_SUBMIT, { recipient, amount });
   };
   return (
     <div className="flex-column">

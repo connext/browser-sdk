@@ -1,9 +1,15 @@
 import EventEmitter from "eventemitter3";
-import { JsonRpcRequest, IRpcConnection } from "@connext/types";
+import {
+  JsonRpcRequest,
+  IRpcConnection,
+  EventName,
+  MethodName,
+} from "@connext/types";
+import { ChannelProvider } from "@connext/channel-provider";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
-import { ChannelProvider } from "@connext/channel-provider";
+import { isEventName, isMethodName } from "./validators";
 
 export class IframeRpcConnection
   extends EventEmitter<string>
@@ -11,7 +17,9 @@ export class IframeRpcConnection
   public iframe: HTMLIFrameElement | undefined;
   public opts: IframeOptions;
   public connected = false;
+
   private subscribed = false;
+  private events = new EventEmitter<string>();
 
   constructor(opts: IframeOptions) {
     super();
@@ -42,12 +50,12 @@ export class IframeRpcConnection
       if (!request.method.trim()) {
         throw new Error("Missing payload method or invalid");
       }
-      this.on(`${request.id}`, (response) => {
+      this.events.on(`${request.id}`, (response) => {
         if (response?.result) {
           resolve(response?.result);
         } else {
           if (response?.error?.message) {
-            reject(new Error(response?.error?.message));
+            reject(new Error(response.error.message));
           } else {
             reject(new Error(`Failed request for method: ${request.method}`));
           }
@@ -59,6 +67,40 @@ export class IframeRpcConnection
       );
     });
   }
+  public on = (
+    event: string | EventName | MethodName,
+    listener: (...args: any[]) => void
+  ): any => {
+    if (isEventName(event) || isMethodName(event)) {
+      return this.send({
+        method: "chan_subscribe",
+        params: { event, once: false },
+      }).then((id) => {
+        this.events.on(id, listener);
+      });
+    }
+    return this.events.on(event, listener);
+  };
+
+  public once = (
+    event: string | EventName | MethodName,
+    listener: (...args: any[]) => void
+  ): any => {
+    if (isEventName(event) || isMethodName(event)) {
+      return this.send({
+        method: "chan_subscribe",
+        params: { event, once: true },
+      }).then((id) => {
+        this.events.once(id, listener);
+      });
+    }
+    return this.events.once(event, listener);
+  };
+
+  public removeAllListeners = (): any => {
+    this.events.removeAllListeners();
+    return this.send({ method: "chan_unsubscribeAll" });
+  };
 
   public render(): Promise<void> {
     if (this.iframe) {
@@ -68,7 +110,7 @@ export class IframeRpcConnection
       return Promise.resolve(); // already exists
     }
     return new Promise((resolve) => {
-      this.on("iframe-initialized", () => {
+      this.events.on("iframe-initialized", () => {
         this.onConnect();
         resolve();
       });
@@ -103,10 +145,15 @@ export class IframeRpcConnection
       }
       if (e.data.startsWith("event:")) {
         const event = e.data.replace("event:", "");
-        this.emit(event);
+        this.events.emit(event);
       } else {
         const payload = JSON.parse(e.data);
-        this.emit(`${payload.id}`, payload);
+        if (payload.method === "chan_subscription") {
+          const { subscription, data } = payload.params;
+          this.events.emit(subscription, data);
+        } else {
+          this.events.emit(`${payload.id}`, payload);
+        }
       }
     }
   }
@@ -143,14 +190,14 @@ export class IframeRpcConnection
 
   private onConnect() {
     this.connected = true;
-    this.emit("connect");
-    this.emit("open");
+    this.events.emit("connect");
+    this.events.emit("open");
   }
 
   private onDisconnect() {
     this.connected = false;
-    this.emit("disconnect");
-    this.emit("close");
+    this.events.emit("disconnect");
+    this.events.emit("close");
   }
 }
 
@@ -161,12 +208,4 @@ export class IframeChannelProvider extends ChannelProvider {
   get isIframe(): boolean {
     return true;
   }
-}
-
-export function isIframe(
-  channelProvider: ChannelProvider | IframeChannelProvider
-): channelProvider is IframeChannelProvider {
-  return (
-    typeof (channelProvider as IframeChannelProvider).isIframe !== "undefined"
-  );
 }

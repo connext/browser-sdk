@@ -1,4 +1,6 @@
 import { BigNumber } from "ethers";
+import { EventNames } from "@connext/types";
+import { addressBook } from "@connext/contracts";
 
 import * as constants from "../constants";
 import {
@@ -9,7 +11,6 @@ import {
 } from "../helpers";
 import { PreDepositBalance } from "../typings";
 import ConnextSDK from "..";
-import { EventNames } from "@connext/types";
 
 class DepositController {
   constructor(private sdk: ConnextSDK) {
@@ -90,11 +91,11 @@ class DepositController {
       if (freeBalanceEth.gt(BigNumber.from(0))) {
         await this.swapEthForToken(freeBalanceEth);
       }
-      this.sdk.emit(constants.DEPOSIT_SUCCESS);
+      this.sdk.events.emit(constants.DEPOSIT_SUCCESS);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
     } catch (e) {
       console.error(e);
-      this.sdk.emit(constants.DEPOSIT_FAILURE);
+      this.sdk.events.emit(constants.DEPOSIT_FAILURE);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_FAILURE);
     }
   }
@@ -137,9 +138,17 @@ class DepositController {
       if (typeof this.sdk.channel === "undefined") {
         throw new Error(this.sdk.text.error.missing_channel);
       }
-      this.sdk.channel.once(EventNames.DEPOSIT_CONFIRMED_EVENT, async () => {
+      this.sdk.channel.on(EventNames.UNINSTALL_EVENT, async (e) => {
         if (typeof this.sdk.channel === "undefined") {
           throw new Error(this.sdk.text.error.missing_channel);
+        }
+        const network = await this.sdk.channel.ethProvider.getNetwork();
+        if (
+          e.uninstalledApp.appDefinition !==
+            addressBook[network.chainId].DepositApp.address &&
+          e.uninstalledApp.latestState.assetId === constants.ETH_ASSET_ID
+        ) {
+          return;
         }
         const swapRate = await this.sdk.channel.getLatestSwapRate(
           constants.ETH_ASSET_ID,
@@ -153,8 +162,23 @@ class DepositController {
         });
         resolve();
       });
-      this.sdk.channel.once(EventNames.DEPOSIT_FAILED_EVENT, (e) => {
-        reject(e);
+      this.sdk.channel.on(EventNames.UNINSTALL_FAILED_EVENT, async (e) => {
+        if (typeof this.sdk.channel === "undefined") {
+          throw new Error(this.sdk.text.error.missing_channel);
+        }
+        const res = await this.sdk.channel.getAppInstance(
+          e.params.appIdentityHash
+        );
+        if (typeof res === "undefined") return;
+        const network = await this.sdk.channel.ethProvider.getNetwork();
+        if (
+          res.appInstance.appDefinition !==
+            addressBook[network.chainId].DepositApp.address &&
+          res.appInstance.latestState.assetId === constants.ETH_ASSET_ID
+        ) {
+          return;
+        }
+        reject(e.error);
       });
     });
   }

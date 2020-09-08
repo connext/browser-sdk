@@ -24,7 +24,7 @@ function Login({ sdk, stage }: ILoginProps) {
       console.error(sdk.text.error.invalid_email);
       return;
     }
-    sdk.emit(LOGIN_SUBMIT, { email });
+    sdk.events.emit(LOGIN_SUBMIT, { email });
   };
 
   return (
