@@ -99,7 +99,7 @@ export class IframeRpcConnection
 
   public removeAllListeners = (): any => {
     this.events.removeAllListeners();
-    return this.send({ method: "chan_unsubscribe" });
+    return this.send({ method: "chan_unsubscribeAll" });
   };
 
   public render(): Promise<void> {

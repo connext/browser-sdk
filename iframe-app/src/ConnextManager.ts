@@ -98,7 +98,7 @@ export default class ConnextManager {
       }
       return subscription;
     }
-    if (request.method === "chan_unsubscribe") {
+    if (request.method === "chan_unsubscribeAll") {
       this.channel.channelProvider.removeAllListeners();
       return true;
     }
