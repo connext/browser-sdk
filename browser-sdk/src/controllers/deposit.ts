@@ -1,4 +1,6 @@
 import { BigNumber } from "ethers";
+import { EventNames } from "@connext/types";
+import { addressBook } from "@connext/contracts";
 
 import * as constants from "../constants";
 import {
@@ -34,9 +36,9 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
-    // await this.sdk.channel.requestDepositRights({
-    //   assetId: constants.ETH_ASSET_ID,
-    // });
+    await this.sdk.channel.requestDepositRights({
+      assetId: constants.ETH_ASSET_ID,
+    });
     await this.sdk.channel.requestDepositRights({
       assetId: this.sdk.tokenAddress,
     });
@@ -46,9 +48,9 @@ class DepositController {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
-    // await this.sdk.channel.rescindDepositRights({
-    //   assetId: constants.ETH_ASSET_ID,
-    // });
+    await this.sdk.channel.rescindDepositRights({
+      assetId: constants.ETH_ASSET_ID,
+    });
     await this.sdk.channel.rescindDepositRights({
       assetId: this.sdk.tokenAddress,
     });
@@ -85,6 +87,10 @@ class DepositController {
     try {
       await this.unsubscribeToDeposit();
       await this.rescindDepositRights();
+      const freeBalanceEth = await this.getEthFreeBalance();
+      if (freeBalanceEth.gt(BigNumber.from(0))) {
+        await this.swapEthForToken(freeBalanceEth);
+      }
       this.sdk.events.emit(constants.DEPOSIT_SUCCESS);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
     } catch (e) {
@@ -92,6 +98,16 @@ class DepositController {
       this.sdk.events.emit(constants.DEPOSIT_FAILURE);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_FAILURE);
     }
+  }
+
+  private async getEthFreeBalance() {
+    if (typeof this.sdk.channel === "undefined") {
+      throw new Error(this.sdk.text.error.not_logged_in);
+    }
+    const result = await this.sdk.channel.getFreeBalance(
+      constants.ETH_ASSET_ID
+    );
+    return BigNumber.from(result[this.sdk.channel.signerAddress]);
   }
 
   private async getOnChainTokenBalance() {
@@ -117,6 +133,56 @@ class DepositController {
     return ethBalance;
   }
 
+  private async swapEthForToken(amount: BigNumber) {
+    return new Promise(async (resolve, reject) => {
+      if (typeof this.sdk.channel === "undefined") {
+        throw new Error(this.sdk.text.error.missing_channel);
+      }
+      this.sdk.channel.on(EventNames.UNINSTALL_EVENT, async (e) => {
+        if (typeof this.sdk.channel === "undefined") {
+          throw new Error(this.sdk.text.error.missing_channel);
+        }
+        const network = await this.sdk.channel.ethProvider.getNetwork();
+        if (
+          e.uninstalledApp.appDefinition !==
+            addressBook[network.chainId].DepositApp.address &&
+          e.uninstalledApp.latestState.assetId === constants.ETH_ASSET_ID
+        ) {
+          return;
+        }
+        const swapRate = await this.sdk.channel.getLatestSwapRate(
+          constants.ETH_ASSET_ID,
+          this.sdk.tokenAddress
+        );
+        await this.sdk.channel.swap({
+          amount,
+          swapRate,
+          fromAssetId: constants.ETH_ASSET_ID,
+          toAssetId: this.sdk.tokenAddress,
+        });
+        resolve();
+      });
+      this.sdk.channel.on(EventNames.UNINSTALL_FAILED_EVENT, async (e) => {
+        if (typeof this.sdk.channel === "undefined") {
+          throw new Error(this.sdk.text.error.missing_channel);
+        }
+        const res = await this.sdk.channel.getAppInstance(
+          e.params.appIdentityHash
+        );
+        if (typeof res === "undefined") return;
+        const network = await this.sdk.channel.ethProvider.getNetwork();
+        if (
+          res.appInstance.appDefinition !==
+            addressBook[network.chainId].DepositApp.address &&
+          res.appInstance.latestState.assetId === constants.ETH_ASSET_ID
+        ) {
+          return;
+        }
+        reject(e.error);
+      });
+    });
+  }
+
   private async onNewBlock() {
     if (typeof this.sdk.channel === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
@@ -131,8 +197,14 @@ class DepositController {
   }
   private async assertBalanceIncrease(preDepositBalance: PreDepositBalance) {
     const tokenBalance = await this.getOnChainTokenBalance();
-    return BigNumber.from(tokenBalance).gt(
-      BigNumber.from(preDepositBalance.tokenBalance)
+    const ethBalance = await this.getOnChainEthBalance();
+    return (
+      BigNumber.from(tokenBalance).gt(
+        BigNumber.from(preDepositBalance.tokenBalance)
+      ) ||
+      BigNumber.from(ethBalance).gt(
+        BigNumber.from(preDepositBalance.ethBalance)
+      )
     );
   }
 
