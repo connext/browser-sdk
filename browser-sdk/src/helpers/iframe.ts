@@ -157,8 +157,6 @@ export class IframeRpcConnection
         const payload = JSON.parse(e.data);
         if (payload.method === "chan_subscription") {
           const { subscription, data } = payload.params;
-          console.log("[chan_subscription]", "subscription", subscription);
-          console.log("[chan_subscription]", "data", data);
           this.events.emit(subscription, data);
         } else {
           this.events.emit(`${payload.id}`, payload);

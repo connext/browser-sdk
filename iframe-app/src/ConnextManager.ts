@@ -24,7 +24,7 @@ export default class ConnextManager {
       window.addEventListener("DOMContentLoaded", () => {
         window.parent.postMessage(
           "event:iframe-initialized",
-          this.parentOrigin
+          this.parentOrigin as string
         );
       });
     } else {
@@ -65,7 +65,6 @@ export default class ConnextManager {
 
   private async handleRequest(request: JsonRpcRequest) {
     if (request.method === "connext_authenticate") {
-      console.log("[connext_authenticate]", "request.params", request.params);
       await this.initChannel(
         request.params.ethProviderUrl,
         request.params.nodeUrl,
@@ -79,7 +78,6 @@ export default class ConnextManager {
       );
     }
     if (request.method === "chan_subscribe") {
-      console.log("[chan_subscribe]", "request.params", request.params);
       const subscription = utils.keccak256(utils.toUtf8Bytes(`${request.id}`));
 
       this.channel.on(request.params.event, (data) => {
@@ -92,7 +90,6 @@ export default class ConnextManager {
             data,
           },
         };
-        console.log("[chan_subscription]", "payload", payload);
         window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
       });
       return subscription;
@@ -101,7 +98,6 @@ export default class ConnextManager {
       this.channel.off();
       return true;
     }
-    console.log(`[${request.method}]`, "request.params", request.params);
     return await this.channel.channelProvider.send(
       request.method as ChannelMethods,
       request.params
