@@ -78,29 +78,29 @@ export default class ConnextManager {
         "Channel provider not initialized within iframe app - ensure that connext_authenticate is called before any other commands"
       );
     }
-    // if (request.method === "chan_subscribe") {
-    //   console.log("[chan_subscribe]", "request.params", request.params);
-    //   const subscription = utils.keccak256(utils.toUtf8Bytes(`${request.id}`));
+    if (request.method === "chan_subscribe") {
+      console.log("[chan_subscribe]", "request.params", request.params);
+      const subscription = utils.keccak256(utils.toUtf8Bytes(`${request.id}`));
 
-    //   this.channel.on(request.params.event, (data) => {
-    //     const payload: JsonRpcRequest = {
-    //       id: payloadId(),
-    //       jsonrpc: "2.0",
-    //       method: "chan_subscription",
-    //       params: {
-    //         subscription,
-    //         data,
-    //       },
-    //     };
-    //     console.log("[chan_subscription]", "payload", payload);
-    //     window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
-    //   });
-    //   return subscription;
-    // }
-    // if (request.method === "chan_unsubscribe") {
-    //   this.channel.off();
-    //   return true;
-    // }
+      this.channel.on(request.params.event, (data) => {
+        const payload: JsonRpcRequest = {
+          id: payloadId(),
+          jsonrpc: "2.0",
+          method: "chan_subscription",
+          params: {
+            subscription,
+            data,
+          },
+        };
+        console.log("[chan_subscription]", "payload", payload);
+        window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
+      });
+      return subscription;
+    }
+    if (request.method === "chan_unsubscribe") {
+      this.channel.off();
+      return true;
+    }
     console.log(`[${request.method}]`, "request.params", request.params);
     return await this.channel.channelProvider.send(
       request.method as ChannelMethods,

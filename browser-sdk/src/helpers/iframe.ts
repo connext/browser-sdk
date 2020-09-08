@@ -24,6 +24,7 @@ export class IframeRpcConnection
   public iframe: HTMLIFrameElement | undefined;
   public opts: IframeOptions;
   public connected = false;
+
   private subscribed = false;
   private events = new EventEmitter<string>();
 
@@ -61,7 +62,7 @@ export class IframeRpcConnection
           resolve(response?.result);
         } else {
           if (response?.error?.message) {
-            reject(new Error(response?.error?.message));
+            reject(new Error(response.error.message));
           } else {
             reject(new Error(`Failed request for method: ${request.method}`));
           }
