@@ -56,11 +56,6 @@ class ConnextSDK extends EventEmitter {
         id: constants.CONNEXT_IFRAME_ID,
       });
     this.depositController = new DepositController(this);
-    console.log(
-      `isEventName('DEPOSIT_CONFIRMED_EVENT')`,
-      isEventName("DEPOSIT_CONFIRMED_EVENT")
-    );
-    console.log(`isEventName('connect')`, isEventName("connect"));
   }
 
   get publicIdentifier(): string {
