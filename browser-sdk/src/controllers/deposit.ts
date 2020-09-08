@@ -85,11 +85,11 @@ class DepositController {
     try {
       await this.unsubscribeToDeposit();
       await this.rescindDepositRights();
-      this.sdk.emit(constants.DEPOSIT_SUCCESS);
+      this.sdk.events.emit(constants.DEPOSIT_SUCCESS);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_SUCCESS);
     } catch (e) {
       console.error(e);
-      this.sdk.emit(constants.DEPOSIT_FAILURE);
+      this.sdk.events.emit(constants.DEPOSIT_FAILURE);
       this.sdk.modal.setDepositStage(constants.DEPOSIT_FAILURE);
     }
   }
