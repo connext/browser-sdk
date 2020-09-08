@@ -74,7 +74,7 @@ export class IframeRpcConnection
     if (isEventName(event) || isMethodName(event)) {
       return this.send({
         method: "chan_subscribe",
-        params: { event },
+        params: { event, once: false },
       }).then((id) => {
         this.events.on(id, listener);
       });
@@ -89,7 +89,7 @@ export class IframeRpcConnection
     if (isEventName(event) || isMethodName(event)) {
       return this.send({
         method: "chan_subscribe",
-        params: { event },
+        params: { event, once: true },
       }).then((id) => {
         this.events.once(id, listener);
       });

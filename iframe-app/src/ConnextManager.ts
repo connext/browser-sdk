@@ -79,8 +79,7 @@ export default class ConnextManager {
     }
     if (request.method === "chan_subscribe") {
       const subscription = utils.keccak256(utils.toUtf8Bytes(`${request.id}`));
-
-      this.channel.on(request.params.event, (data) => {
+      const listener = (data: any) => {
         const payload: JsonRpcRequest = {
           id: payloadId(),
           jsonrpc: "2.0",
@@ -91,11 +90,16 @@ export default class ConnextManager {
           },
         };
         window.parent.postMessage(JSON.stringify(payload), this.parentOrigin);
-      });
+      };
+      if (request.params.once) {
+        this.channel.channelProvider.once(request.params.event, listener);
+      } else {
+        this.channel.channelProvider.on(request.params.event, listener);
+      }
       return subscription;
     }
     if (request.method === "chan_unsubscribe") {
-      this.channel.off();
+      this.channel.channelProvider.removeAllListeners();
       return true;
     }
     return await this.channel.channelProvider.send(
