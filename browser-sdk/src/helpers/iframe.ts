@@ -25,6 +25,7 @@ export class IframeRpcConnection
   public opts: IframeOptions;
   public connected = false;
   private subscribed = false;
+  private events = new EventEmitter<string>();
 
   constructor(opts: IframeOptions) {
     super();
@@ -55,7 +56,7 @@ export class IframeRpcConnection
       if (!request.method.trim()) {
         throw new Error("Missing payload method or invalid");
       }
-      this.on(`${request.id}`, (response) => {
+      this.events.on(`${request.id}`, (response) => {
         if (response?.result) {
           resolve(response?.result);
         } else {
@@ -76,15 +77,14 @@ export class IframeRpcConnection
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
-    if (!this.connected) return;
     if (RpcConnectionEvents.includes(event)) {
-      return this.on(event, listener);
+      return this.events.on(event, listener);
     }
     this.send({
       method: "chan_subscribe",
       params: { event },
     }).then((id) => {
-      this.on(id, listener);
+      this.events.on(id, listener);
     });
   };
 
@@ -92,20 +92,19 @@ export class IframeRpcConnection
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
-    if (!this.connected) return;
     if (RpcConnectionEvents.includes(event)) {
-      return this.on(event, listener);
+      return this.events.on(event, listener);
     }
     this.send({
       method: "chan_subscribe",
       params: { event },
     }).then((id) => {
-      this.once(id, listener);
+      this.events.once(id, listener);
     });
   };
 
   public removeAllListeners = (): any => {
-    if (!this.connected) return;
+    this.events.removeAllListeners();
     return this.send({ method: "chan_unsubscribe" });
   };
 
@@ -117,7 +116,7 @@ export class IframeRpcConnection
       return Promise.resolve(); // already exists
     }
     return new Promise((resolve) => {
-      this.on("iframe-initialized", () => {
+      this.events.on("iframe-initialized", () => {
         this.onConnect();
         resolve();
       });
@@ -152,13 +151,16 @@ export class IframeRpcConnection
       }
       if (e.data.startsWith("event:")) {
         const event = e.data.replace("event:", "");
-        this.emit(event);
+        this.events.emit(event);
       } else {
         const payload = JSON.parse(e.data);
         if (payload.method === "chan_subscription") {
-          this.emit(payload.params.subscription, payload.params.data);
+          const { subscription, data } = payload.params;
+          console.log("[chan_subscription]", "subscription", subscription);
+          console.log("[chan_subscription]", "data", data);
+          this.events.emit(subscription, data);
         } else {
-          this.emit(`${payload.id}`, payload);
+          this.events.emit(`${payload.id}`, payload);
         }
       }
     }
@@ -196,14 +198,14 @@ export class IframeRpcConnection
 
   private onConnect() {
     this.connected = true;
-    this.emit("connect");
-    this.emit("open");
+    this.events.emit("connect");
+    this.events.emit("open");
   }
 
   private onDisconnect() {
     this.connected = false;
-    this.emit("disconnect");
-    this.emit("close");
+    this.events.emit("disconnect");
+    this.events.emit("close");
   }
 }
 

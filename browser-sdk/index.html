@@ -9,7 +9,10 @@
         iframeSrc: "http://localhost:3030",
       });
       function login() {
-        connext.login().then((x) => console.log("LOGIN", x));
+        connext.login().then((x) => {
+          console.log("LOGIN", x);
+          subscribeToDeposit();
+        });
       }
       function publicIdentifier() {
         console.log("PUBLIC IDENTIFIER", connext.publicIdentifier);
@@ -38,6 +41,11 @@
       }
       function logout() {
         connext.logout().then((x) => console.log("LOGOUT", x));
+      }
+      function subscribeToDeposit() {
+        connext.channel.on("DEPOSIT_CONFIRMED_EVENT", () => {
+          console.log("DEPOSIT_CONFIRMED_EVENT");
+        });
       }
     </script>
   </head>
