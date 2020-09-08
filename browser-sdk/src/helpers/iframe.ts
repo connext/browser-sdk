@@ -5,18 +5,11 @@ import {
   EventName,
   MethodName,
 } from "@connext/types";
+import { ChannelProvider } from "@connext/channel-provider";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
-import { ChannelProvider } from "@connext/channel-provider";
-
-const RpcConnectionEvents = [
-  "open",
-  "close",
-  "connect",
-  "disconnect",
-  "message",
-];
+import { isEventName, isMethodName } from "./validators";
 
 export class IframeRpcConnection
   extends EventEmitter<string>
@@ -78,30 +71,30 @@ export class IframeRpcConnection
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
-    if (RpcConnectionEvents.includes(event)) {
-      return this.events.on(event, listener);
+    if (isEventName(event) || isMethodName(event)) {
+      return this.send({
+        method: "chan_subscribe",
+        params: { event },
+      }).then((id) => {
+        this.events.on(id, listener);
+      });
     }
-    this.send({
-      method: "chan_subscribe",
-      params: { event },
-    }).then((id) => {
-      this.events.on(id, listener);
-    });
+    return this.events.on(event, listener);
   };
 
   public once = (
     event: string | EventName | MethodName,
     listener: (...args: any[]) => void
   ): any => {
-    if (RpcConnectionEvents.includes(event)) {
-      return this.events.on(event, listener);
+    if (isEventName(event) || isMethodName(event)) {
+      return this.send({
+        method: "chan_subscribe",
+        params: { event },
+      }).then((id) => {
+        this.events.once(id, listener);
+      });
     }
-    this.send({
-      method: "chan_subscribe",
-      params: { event },
-    }).then((id) => {
-      this.events.once(id, listener);
-    });
+    return this.events.once(event, listener);
   };
 
   public removeAllListeners = (): any => {
@@ -215,12 +208,4 @@ export class IframeChannelProvider extends ChannelProvider {
   get isIframe(): boolean {
     return true;
   }
-}
-
-export function isIframe(
-  channelProvider: ChannelProvider | IframeChannelProvider
-): channelProvider is IframeChannelProvider {
-  return (
-    typeof (channelProvider as IframeChannelProvider).isIframe !== "undefined"
-  );
 }
