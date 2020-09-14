@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "node --max-old-space-size=8192 node_modules/.bin/rollup -c",
     "build-and-watch": "rollup -c -w"
   },
   "repository": {
@@ -32,9 +32,9 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@connext/channel-provider": "^7.3.8",
-    "@connext/client": "^7.3.8",
-    "@connext/types": "^7.3.8",
+    "@connext/channel-provider": "^7.3.16",
+    "@connext/client": "^7.3.16",
+    "@connext/types": "^7.3.16",
     "eventemitter3": "4.0.4",
     "magic-sdk": "^2.4.7",
     "react": "^16.13.1",
