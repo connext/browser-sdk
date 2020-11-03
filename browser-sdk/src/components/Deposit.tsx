@@ -15,10 +15,10 @@ interface IDepositProps {
 }
 
 function Deposit({ sdk, stage }: IDepositProps) {
-  if (typeof sdk.channel === "undefined") {
+  if (typeof sdk.browserNode === "undefined") {
     throw new Error(sdk.text.error.missing_channel);
   }
-  const depositAddress = sdk.channel.multisigAddress;
+  const depositAddress = sdk.browserNode.multisigAddress;
   return (
     <div className="flex-column">
       {stage === DEPOSIT_SHOW_QR ? (

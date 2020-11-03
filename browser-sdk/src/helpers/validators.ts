@@ -1,6 +1,11 @@
-import { EventNames, EventName, MethodNames, MethodName } from "@connext/types";
-import { ChannelProvider } from "@connext/channel-provider";
+import {
+  EngineEvent,
+  EngineEvents,
+  ChannelRpcMethods,
+  ChannelRpcMethod,
+} from "@connext/vector-types";
 
+import { ChannelProvider } from "./channelProvider";
 import { IframeChannelProvider } from "./iframe";
 
 export function isIframe(
@@ -11,10 +16,10 @@ export function isIframe(
   );
 }
 
-export function isEventName(event: string): event is EventName {
-  return event in EventNames;
+export function isEventName(event: string): event is EngineEvent {
+  return event in EngineEvents;
 }
 
-export function isMethodName(event: string): event is MethodName {
-  return event in MethodNames;
+export function isMethodName(method: string): method is ChannelRpcMethod {
+  return method in ChannelRpcMethods;
 }

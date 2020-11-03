@@ -1,4 +1,4 @@
-import { addressBook } from "@connext/contracts";
+import { constants } from "ethers";
 
 import Languages from "../i18n";
 import { ConnextSDKOptions, LanguageText } from "../typings";
@@ -57,7 +57,7 @@ export function getChainId(network: string): number {
 export const getUrlOptions = (
   network: string
 ): { ethProviderUrl: string; nodeUrl: string } => {
-  let urlOptions;
+  let urlOptions: { ethProviderUrl: string; nodeUrl: string };
 
   if (network.toLowerCase() === "localhost") {
     urlOptions = {
@@ -92,7 +92,7 @@ export const getSdkOptions = (
     typeof opts === "string" ? getNetworkName(opts) : DEFAULT_NETWORK;
   let options: ConnextSDKOptions = {
     logLevel: 0,
-    tokenAddress: addressBook[getChainId(network)].Token.address,
+    tokenAddress: constants.AddressZero,
     iframeSrc: DEFAULT_IFRAME_SRC,
     magicKey: DEFAULT_MAGIC_KEY,
     ...getUrlOptions(network),

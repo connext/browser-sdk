@@ -1,11 +1,5 @@
 import { Contract, Signer, providers, utils } from "ethers";
-
-const tokenAbi = [
-  "function decimals() public view returns (uint8)",
-  "function mint(address _to, uint256 _value) returns (bool success)",
-  "function transfer(address _to, uint256 _value) returns (bool success)",
-  "function balanceOf(address account) view returns (uint256)",
-];
+import { ERC20Abi } from "@connext/vector-types";
 
 export const isValidAddress = (address?: string) => {
   if (!address) {
@@ -37,7 +31,7 @@ export async function getTokenDecimals(
   let decimals = 18;
   try {
     decimals = (
-      await new Contract(assetId, tokenAbi, ethProvider).functions.decimals()
+      await new Contract(assetId, ERC20Abi, ethProvider).functions.decimals()
     ).toNumber();
   } catch (e) {
     // do nothing
@@ -51,7 +45,7 @@ export async function getTokenBalance(
   assetId: string
 ): Promise<string> {
   return (
-    await new Contract(assetId, tokenAbi, ethProvider).functions.balanceOf(
+    await new Contract(assetId, ERC20Abi, ethProvider).functions.balanceOf(
       address
     )
   ).toString();

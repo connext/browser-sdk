@@ -2,11 +2,11 @@ import { EventEmitter } from "events";
 import React from "react";
 import ReactDOM from "react-dom";
 import { Magic } from "magic-sdk";
-import { ChannelProvider } from "@connext/channel-provider";
 import { utils } from "ethers";
-import * as connext from "@connext/client";
-import { toWad, fromWad } from "@connext/utils";
-import { EventName, IConnextClient } from "@connext/types";
+import { EngineEvent, INodeService } from "@connext/vector-types";
+import { getRandomChannelSigner } from "@connext/vector-utils";
+import { BrowserNode } from "@connext/vector-browser-node";
+import pino from "pino";
 
 import Modal from "./components/Modal";
 import * as constants from "./constants";
@@ -21,6 +21,7 @@ import {
   getTokenDecimals,
   isEventName,
 } from "./helpers";
+import { ChannelProvider } from "./helpers/channelProvider";
 
 class ConnextSDK {
   public text: LanguageText;
@@ -31,7 +32,8 @@ class ConnextSDK {
   public events = new EventEmitter();
 
   public modal: Modal | undefined;
-  public channel: IConnextClient | undefined;
+  public browserNode: INodeService | undefined;
+  public channelAddress: string | undefined;
 
   private magic: Magic | undefined;
   private channelProvider: ChannelProvider | IframeChannelProvider;
@@ -59,10 +61,10 @@ class ConnextSDK {
   }
 
   get publicIdentifier(): string {
-    if (typeof this.channel?.publicIdentifier === "undefined") {
+    if (typeof this.browserNode?.publicIdentifier === "undefined") {
       throw new Error(this.text.error.not_logged_in);
     }
-    return this.channel?.publicIdentifier;
+    return this.browserNode?.publicIdentifier;
   }
 
   public async login(): Promise<boolean> {
@@ -119,7 +121,7 @@ class ConnextSDK {
   public async deposit(): Promise<boolean> {
     if (
       typeof this.modal === "undefined" ||
-      typeof this.channel === "undefined"
+      typeof this.browserNode === "undefined"
     ) {
       throw new Error(this.text.error.not_logged_in);
     }
@@ -150,18 +152,19 @@ class ConnextSDK {
       this.on(constants.WITHDRAW_SUBMIT, async ({ recipient, amount }) => {
         if (
           typeof this.modal === "undefined" ||
-          typeof this.channel === "undefined"
+          typeof this.browserNode === "undefined"
         ) {
           throw new Error(this.text.error.not_logged_in);
         }
         try {
-          if (typeof this.channel === "undefined") {
+          if (typeof this.browserNode === "undefined") {
             throw new Error(this.text.error.missing_channel);
           }
-          await this.channel.withdraw({
+          await this.browserNode.withdraw({
             recipient,
-            amount: toWad(amount, this.tokenDecimals),
+            amount,
             assetId: this.tokenAddress,
+            channelAddress: this.channelAddress!,
           });
         } catch (error) {
           console.error(error);
@@ -175,24 +178,27 @@ class ConnextSDK {
   }
 
   public async balance(): Promise<string> {
-    if (typeof this.channel === "undefined") {
+    if (typeof this.browserNode === "undefined") {
       throw new Error(this.text.error.not_logged_in);
     }
-    const result = await this.channel.getFreeBalance(this.tokenAddress);
-    return fromWad(result[this.channel.signerAddress], this.tokenDecimals);
+    const result = await this.browserNode.getStateChannel(this.channelAddress);
+    if (result.isError) {
+      throw result.getError();
+    }
+    return result[this.browserNode.signerAddress];
   }
 
   public async transfer(recipient: string, amount: string): Promise<boolean> {
-    if (typeof this.channel === "undefined") {
+    if (typeof this.browserNode === "undefined") {
       throw new Error(this.text.error.not_logged_in);
     }
     if (this.depositController.subscribed) {
       throw new Error(this.text.error.awaiting_deposit);
     }
     try {
-      await this.channel.transfer({
+      await this.browserNode.transfer({
         recipient,
-        amount: toWad(amount, this.tokenDecimals),
+        amount,
         assetId: this.tokenAddress,
       });
       return true;
@@ -203,10 +209,10 @@ class ConnextSDK {
   }
 
   public async getTransactionHistory(): Promise<Array<ConnextTransaction>> {
-    if (typeof this.channel === "undefined") {
+    if (typeof this.browserNode === "undefined") {
       throw new Error(this.text.error.not_logged_in);
     }
-    const result = await this.channel.getTransferHistory();
+    const result = await this.browserNode.getTransferHistory();
     // TODO: parse transfer history to match ConnextTransaction interface
     return result as any;
   }
@@ -214,13 +220,13 @@ class ConnextSDK {
   public async logout(): Promise<boolean> {
     if (
       typeof this.magic === "undefined" ||
-      typeof this.channel === "undefined" ||
+      typeof this.browserNode === "undefined" ||
       typeof this.modal === "undefined"
     ) {
       throw new Error(this.text.error.not_logged_in);
     }
     await this.magic.user.logout();
-    await this.channel.off();
+    await this.browserNode.off();
     await this.channelProvider.close();
     await this.unrenderModal();
     await this.reset();
@@ -228,27 +234,27 @@ class ConnextSDK {
   }
 
   public on = (
-    event: string | EventName,
+    event: string | EngineEvent,
     listener: (...args: any[]) => void
   ): any => {
     if (isEventName(event)) {
-      if (typeof this.channel === "undefined") {
+      if (typeof this.browserNode === "undefined") {
         throw new Error(this.text.error.not_logged_in);
       }
-      return this.channel.on(event, listener);
+      return this.browserNode.on(event, listener);
     }
     return this.events.on(event, listener);
   };
 
   public once = (
-    event: string | EventName,
+    event: string | EngineEvent,
     listener: (...args: any[]) => void
   ): any => {
     if (isEventName(event)) {
-      if (typeof this.channel === "undefined") {
+      if (typeof this.browserNode === "undefined") {
         throw new Error(this.text.error.not_logged_in);
       }
-      return this.channel.once(event, listener);
+      return this.browserNode.once(event, listener);
     }
     return this.events.once(event, listener);
   };
@@ -315,12 +321,17 @@ class ConnextSDK {
   }
 
   private async initChannel() {
-    this.channel = await connext.connect({
-      ethProviderUrl: this.ethProviderUrl,
-      channelProvider: this.channelProvider,
+    this.browserNode = await BrowserNode.connect({
+      chainAddresses: {},
+      chainProviders: { 1337: "http://localhost:8545" },
+      logger: pino(),
+      signer: getRandomChannelSigner(),
+      messagingUrl: "https://messaging.connext.network",
+      // channelProvider: this.channelProvider,
     });
+
     this.tokenDecimals = await getTokenDecimals(
-      this.channel.ethProvider,
+      this.browserNode.ethProvider,
       this.tokenAddress
     );
   }
@@ -352,7 +363,7 @@ class ConnextSDK {
     await this.depositController.unsubscribeToDeposit();
     this.events.removeAllListeners();
     this.tokenDecimals = 18;
-    this.channel = undefined;
+    this.browserNode = undefined;
     this.modal = undefined;
   }
 }

@@ -20,26 +20,28 @@
   },
   "homepage": "https://github.com/connext/browser-sdk#readme",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.0.0",
+    "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@rollup/plugin-replace": "^2.3.3",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "@rollup/plugin-replace": "^2.3.4",
+    "@types/pino": "^6.3.3",
     "@types/react": "^16.9.46",
     "@types/react-dom": "^16.9.8",
     "rollup-plugin-node-polyfills": "^0.2.1",
-    "rollup-plugin-typescript2": "^0.27.2",
+    "rollup-plugin-typescript2": "^0.29.0",
     "serve": "^11.3.2",
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@connext/channel-provider": "^7.3.16",
-    "@connext/client": "^7.3.16",
-    "@connext/types": "^7.3.16",
-    "eventemitter3": "4.0.4",
-    "magic-sdk": "^2.4.7",
+    "@connext/vector-browser-node": "0.0.5",
+    "@connext/vector-types": "0.0.5",
+    "@connext/vector-utils": "0.0.5",
+    "eventemitter3": "4.0.7",
+    "magic-sdk": "^3.0.1",
+    "pino": "^6.7.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-qr-code": "^1.0.2",
-    "rollup": "^2.26.4"
+    "react-qr-code": "^1.0.3",
+    "rollup": "^2.33.1"
   }
 }

@@ -31,45 +31,45 @@ class DepositController {
   }
 
   public async requestDepositRights() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
     // await this.sdk.channel.requestDepositRights({
     //   assetId: constants.ETH_ASSET_ID,
     // });
-    await this.sdk.channel.requestDepositRights({
+    await this.sdk.browserNode.requestDepositRights({
       assetId: this.sdk.tokenAddress,
     });
   }
 
   public async rescindDepositRights() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
     // await this.sdk.channel.rescindDepositRights({
     //   assetId: constants.ETH_ASSET_ID,
     // });
-    await this.sdk.channel.rescindDepositRights({
+    await this.sdk.browserNode.rescindDepositRights({
       assetId: this.sdk.tokenAddress,
     });
   }
 
   public async subscribeToDeposit() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
     }
     this.setPreDepositBalance({
       tokenBalance: await this.getOnChainTokenBalance(),
       ethBalance: await this.getOnChainEthBalance(),
     });
-    this.sdk.channel.ethProvider.on("block", this.onNewBlock.bind(this));
+    this.sdk.browserNode.ethProvider.on("block", this.onNewBlock.bind(this));
   }
 
   public async unsubscribeToDeposit() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
     }
-    this.sdk.channel.ethProvider.off("block", this.onNewBlock.bind(this));
+    this.sdk.browserNode.ethProvider.off("block", this.onNewBlock.bind(this));
   }
 
   // ---------- Private ----------------------------------------------- //
@@ -77,7 +77,7 @@ class DepositController {
   private async onDepositSuccess() {
     if (
       typeof this.sdk.modal === "undefined" ||
-      typeof this.sdk.channel === "undefined"
+      typeof this.sdk.browserNode === "undefined"
     ) {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
@@ -95,30 +95,30 @@ class DepositController {
   }
 
   private async getOnChainTokenBalance() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
     const tokenBalance = await getTokenBalance(
-      this.sdk.channel.multisigAddress,
-      this.sdk.channel.ethProvider,
+      this.sdk.browserNode.multisigAddress,
+      this.sdk.browserNode.ethProvider,
       this.sdk.tokenAddress
     );
     return tokenBalance;
   }
 
   private async getOnChainEthBalance() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.not_logged_in);
     }
     const ethBalance = await getEthBalance(
-      this.sdk.channel.multisigAddress,
-      this.sdk.channel.ethProvider
+      this.sdk.browserNode.multisigAddress,
+      this.sdk.browserNode.ethProvider
     );
     return ethBalance;
   }
 
   private async onNewBlock() {
-    if (typeof this.sdk.channel === "undefined") {
+    if (typeof this.sdk.browserNode === "undefined") {
       throw new Error(this.sdk.text.error.missing_channel);
     }
     const preDepositBalance = this.getPreDepositBalance();

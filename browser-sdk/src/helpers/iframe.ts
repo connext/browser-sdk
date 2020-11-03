@@ -1,15 +1,14 @@
 import EventEmitter from "eventemitter3";
 import {
+  ChannelRpcMethod,
   JsonRpcRequest,
-  IRpcConnection,
-  EventName,
-  MethodName,
-} from "@connext/types";
-import { ChannelProvider } from "@connext/channel-provider";
+  EngineEvent,
+} from "@connext/vector-types";
 
 import { renderElement, payloadId } from "./util";
 import { IframeOptions } from "../typings";
 import { isEventName, isMethodName } from "./validators";
+import { ChannelProvider, IRpcConnection } from "./channelProvider";
 
 export class IframeRpcConnection
   extends EventEmitter<string>
@@ -68,7 +67,7 @@ export class IframeRpcConnection
     });
   }
   public on = (
-    event: string | EventName | MethodName,
+    event: string | EngineEvent | ChannelRpcMethod,
     listener: (...args: any[]) => void
   ): any => {
     if (isEventName(event) || isMethodName(event)) {
@@ -83,7 +82,7 @@ export class IframeRpcConnection
   };
 
   public once = (
-    event: string | EventName | MethodName,
+    event: string | EngineEvent | ChannelRpcMethod,
     listener: (...args: any[]) => void
   ): any => {
     if (isEventName(event) || isMethodName(event)) {
@@ -202,10 +201,9 @@ export class IframeRpcConnection
 }
 
 export class IframeChannelProvider extends ChannelProvider {
+  public readonly isIframe = true;
+
   constructor(opts: IframeOptions) {
     super(new IframeRpcConnection(opts));
-  }
-  get isIframe(): boolean {
-    return true;
   }
 }
